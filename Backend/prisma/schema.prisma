@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Hoặc mysql tùy theo CSDL bạn dùng
+}
+
+// ==========================================
+// 1. ENUMS
+// ==========================================
+
+enum role_type {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum request_type {
+  LEAVE
+  WFH
+  OT
+}
+
+enum request_status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum task_status {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum priority_level {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum gender_type{
+  MALE
+  FEMALE
+  OTHER
+}
+
+// ==========================================
+// 2. MODELS / TABLES
+// ==========================================
+
+model department {
+  id         String    @id @default(uuid())
+  title      String    @unique 
+  managerId  String?   @unique
+  manager    user?     @relation("departmentManager",fields: [managerId], references: [id])
+  createdAt  DateTime  @default(now())
+
+  // Relationships
+  users      user[]   @relation("DepartmentMembers")
+  tasks      task[]
+
+  @@map("departments")
+}
+
+model position {
+  id          String @id @default(uuid())
+  title       String @unique
+  createdAt   DateTime @default(now())
+
+  // Relationships
+  users user[]
+
+  @@map("positions")
+}
+
+model user {
+  id                String      @id @default(uuid())
+  email             String      @unique
+  password          String
+  avatarUrl         String?
+  fullName          String
+  gender            gender_type @default(MALE)
+  birthday          DateTime?
+  role              role_type   @default(EMPLOYEE)
+  phone             String?
+  address           String?
+  bio               String?
+  leaveBalance      Int       @default(12)
+  createdAt         DateTime  @default(now())
+  
+  // Foreign Keys
+  departmentId      String?
+  department        department? @relation("DepartmentMembers",fields: [departmentId], references: [id])
+
+  managedDepartment department? @relation("departmentManager")
+
+  positionId        String?
+  position          position? @relation(fields: [positionId], references: [id])
+
+  // Relationships
+  attendances       attendance[]
+  requests          request[]    @relation("UserRequests")
+  reviewedRequests  request[]    @relation("ReviewedRequests")
+  assignedTasks     task[]       @relation("AssigneeTasks")
+  createdTasks      task[]       @relation("CreatorTasks")
+  sessions          session[] 
+  notifications     Notification[]
+  @@map("users")
+}
+
+model attendance {
+  id           String    @id @default(uuid())
+  userId       String
+  user         user      @relation(fields: [userId], references: [id])
+  date         DateTime  @default(now())
+  checkIn      DateTime  @default(now())
+  checkOut     DateTime?
+  workingHours Float?    
+  createdAt    DateTime  @default(now())
+
+  @@map("attendances")
+}
+
+model request {
+  id            String         @id @default(uuid())
+  userId        String
+  user          user           @relation("UserRequests", fields: [userId], references: [id], onDelete: Cascade)
+  type          request_type
+  startDate     DateTime
+  endDate       DateTime
+  reason        String
+  status        request_status @default(PENDING)
+  reviewedBy    String?
+  reviewer      user?         @relation("ReviewedRequests", fields: [reviewedBy], references: [id])
+  rejectReason  String?
+  createdAt     DateTime       @default(now())
+
+  @@map("requests")
+}
+
+model task {
+  id           String         @id @default(uuid())
+  title        String         @unique
+  description  String?
+  status       task_status    @default(TODO)
+  priority     priority_level @default(MEDIUM)
+
+  assigneeId   String
+  assignee     user            @relation("AssigneeTasks", fields: [assigneeId], references: [id], onDelete: Cascade)
+  
+  creatorId    String
+  creator       user           @relation("CreatorTasks", fields: [creatorId], references: [id], onDelete: Cascade)
+  
+  departmentId  String?
+  department    department?     @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  
+  dueDate       DateTime
+  createdAt     DateTime       @default(now())
+
+  @@map("tasks")
+}
+
+model session {
+  id          String   @id @default(uuid())
+  userId      String
+  user        user @relation(fields: [userId] , references: [id], onDelete: Cascade)
+  refreshToken String @unique
+  expiresAt   DateTime  
+  createdAt   DateTime  @default(now())
+  @@map("sessions")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+
+  type      String
+  title     String
+  message   String
+
+  requestId String?
+  taskId    String?
+
+  isRead    Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}

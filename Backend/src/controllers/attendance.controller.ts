@@ -1,0 +1,220 @@
+import type { Request, Response, NextFunction } from "express"
+import { StatusCodes } from "http-status-codes"
+import { prisma } from "../config/db.js"
+import { AttendanceValidation } from "../validations/attendance.validation.js"
+import { STATUS_MESSAGE } from "../constant/systemMessage.js"
+import type { AuthRequest } from "../middlewares/auth.middleware.js"
+
+// Hàm tiện ích: Lấy mốc bắt đầu (00:00:00) và kết thúc (23:59:59.999) của ngày hiện tại
+const getDayRange = (dateInput = new Date()) => {
+  const startOfDay = new Date(dateInput)
+  startOfDay.setHours(0, 0, 0, 0)
+
+  const endOfDay = new Date(dateInput)
+  endOfDay.setHours(23, 59, 59, 999)
+
+  return { startOfDay, endOfDay }
+}
+
+export class AttendanceController {
+  // CHECK-IN
+  public checkIn = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId
+
+      if (!userId) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          message: "Không xác định được danh tính người dùng"
+        })
+      }
+
+      const { startOfDay, endOfDay } = getDayRange()
+
+      // Kiểm tra xem hôm nay user đã check-in chưa
+      const existingAttendance = await prisma.attendance.findFirst({
+        where: {
+          userId,
+          date: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true
+            }
+          }
+        }
+      })
+
+      if (existingAttendance) {
+        return res.status(StatusCodes.CONFLICT).json({
+          message: "Hôm nay bạn đã thực hiện check-in rồi"
+        })
+      }
+
+      const now = new Date()
+      const newAttendance = await prisma.attendance.create({
+        data: {
+          userId,
+          date: now,
+          checkIn: now
+        }
+      })
+
+      return res.status(StatusCodes.CREATED).json({
+        message: "Check-in thành công",
+        data: newAttendance
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // CHECK-OUT
+  public checkOut = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId
+
+      const { startOfDay, endOfDay } = getDayRange()
+
+      const existingAttendance = await prisma.attendance.findFirst({
+        where: {
+          userId,
+          date: { gte: startOfDay, lte: endOfDay }
+        }
+      })
+
+      if (!existingAttendance) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: "Bạn chưa thực hiện check-in hôm nay"
+        })
+      }
+
+      const checkOutTime = new Date()
+
+      // 1. Tính tổng số giờ làm việc
+      const diffMs = checkOutTime.getTime() - existingAttendance.checkIn.getTime()
+      const rawHours = diffMs / (1000 * 60 * 60)
+      const workingHours = Math.round(rawHours * 100) / 100 // Làm tròn 2 số thập phân
+
+      // 2. Lưu cả checkOut và workingHours vào DB
+      const updatedAttendance = await prisma.attendance.update({
+        where: { id: existingAttendance.id },
+        data: {
+          checkOut: checkOutTime,
+          workingHours: workingHours
+        }
+      })
+
+      return res.status(StatusCodes.OK).json({
+        message: `Check-out thành công. Bạn đã làm việc ${workingHours} giờ hôm nay!`,
+        data: updatedAttendance
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // XEM LỊCH SỬ CHẤM CÔNG CÁ NHÂN
+  public getMyAttendance = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId
+      console.log(userId)
+      if (!userId) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          message: "Yêu cầu đăng nhập"
+        })
+      }
+
+      const queryValidation = AttendanceValidation.getHistory.safeParse(req.query)
+      if (!queryValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: queryValidation.error.flatten().fieldErrors
+        })
+      }
+
+      const { month, year } = queryValidation.data
+      const whereCondition: any = { userId }
+
+      // Nếu có truyền month và year (hoặc mặc định tháng/năm hiện tại)
+      if (month && year) {
+        const startOfMonth = new Date(year, month - 1, 1)
+        const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
+        whereCondition.date = {
+          gte: startOfMonth,
+          lte: endOfMonth
+        }
+      }
+
+      const attendances = await prisma.attendance.findMany({
+        where: whereCondition,
+        orderBy: { date: "desc" }
+      })
+
+      return res.status(StatusCodes.OK).json({
+        message: STATUS_MESSAGE.STATUS_OK,
+        data: attendances
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // ADMIN/MANAGER XEM TẤT CẢ CHẤM CÔNG
+  public getAll = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const queryValidation = AttendanceValidation.getHistory.safeParse(req.query)
+      if (!queryValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: queryValidation.error.flatten().fieldErrors
+        })
+      }
+
+      const { month, year, userId, departmentId } = queryValidation.data
+      const whereCondition: any = {}
+
+      if (userId) whereCondition.userId = userId
+
+      // Lọc theo phòng ban thông qua quan hệ của user
+      if (departmentId) {
+        whereCondition.user = {
+          departmentId
+        }
+      }
+
+      if (month && year) {
+        const startOfMonth = new Date(year, month - 1, 1)
+        const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
+        whereCondition.date = {
+          gte: startOfMonth,
+          lte: endOfMonth
+        }
+      }
+
+      const records = await prisma.attendance.findMany({
+        where: whereCondition,
+        orderBy: { date: "desc" },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true
+            }
+          }
+        }
+      })
+
+      return res.status(StatusCodes.OK).json({
+        message: STATUS_MESSAGE.STATUS_OK,
+        data: records
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+}
