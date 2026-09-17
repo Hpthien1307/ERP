@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { axiosClient } from "@/api/axiosClient"
 import type { UserState } from "@/types/profileType"
-import { showToast } from "@/utils/toast"
+import { showToast } from "@/components/ui/toast"
 import { authService } from "@/service/authService"
 
 type AuthState = {

@@ -187,7 +187,6 @@ export class UserController {
   public updateUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const idValidation = UserValidation.getUserId.safeParse(req.params)
-      console.log("id patch user", idValidation)
       if (!idValidation.success) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           message: STATUS_MESSAGE.STATUS_BAD_REQUEST,

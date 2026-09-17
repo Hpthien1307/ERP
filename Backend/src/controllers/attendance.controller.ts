@@ -165,13 +165,13 @@ export class AttendanceController {
         })
       }
 
-      const { month, year, page, limit, search } = queryValidation.data
+      const { month, year, page, limit, filterDate, filterType } = queryValidation.data
       const skip = (page - 1) * limit
 
       const whereCondition: any = { userId }
 
-      if (search) {
-        const targetDate = new Date(search)
+      if (filterDate) {
+        const targetDate = new Date(filterDate)
         const startOfDay = new Date(targetDate)
         startOfDay.setHours(0, 0, 0, 0)
         const endOfDay = new Date(targetDate)
@@ -182,6 +182,18 @@ export class AttendanceController {
         const startOfMonth = new Date(year, month - 1, 1)
         const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
         whereCondition.date = { gte: startOfMonth, lte: endOfMonth }
+      }
+
+      if (filterType === "ALL") {
+        whereCondition.status = "ALL"
+      } else if (filterType === "LATE") {
+        whereCondition.status = "LATE"
+      } else if (filterType === "ON_TIME") {
+        whereCondition.status = "ON_TIME"
+      } else if (filterType === "ABSENT") {
+        whereCondition.status = "ABSENT"
+      } else if (filterType === "LEAVE") {
+        whereCondition.status = "LEAVE"
       }
 
       const [attendances, total] = await Promise.all([

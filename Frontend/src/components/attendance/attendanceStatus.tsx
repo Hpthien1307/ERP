@@ -13,7 +13,8 @@ const AttendanceStatus = () => {
 
   const { mutate: createCheckIn } = useCreate({
     url: "/attendance/check-in",
-    invalidateKey: ["get_today_attendance"]
+    invalidateKey: ["get_today_attendance"],
+    successMessage: "Chấm công vào thành công"
   })
 
   const { mutate: createCheckOut } = useCreate({

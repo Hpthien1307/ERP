@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import UseDebounce from "@/hooks/useDebounce"
 import type { AttendanceListResponse } from "@/types/attendanceType"
 import { getTodayDateString } from "@/utils/formatters"
 
@@ -10,17 +9,17 @@ import AttendanceStats from "@/components/attendance/attendanceStats"
 import AttendaceFilter from "@/components/attendance/attendanceFilter"
 import AttendanceList from "@/components/attendance/attendanceList"
 import useFetch from "@/hooks/useFetch"
+import { type AttendanceFilterType } from "@/types/attendanceType"
 
 const Attendance = () => {
   const [filterDate, setFilterDate] = useState<string>(getTodayDateString())
-  const [filterStatus, setFilterStatus] = useState<string>("ALL")
-  const searchDebounce = UseDebounce(filterDate, 500)
+  const [filterStatus, setFilterStatus] = useState<AttendanceFilterType>("ALL")
   const [myPage, setMyPage] = useState<number>(1)
   const PAGE_SIZE = 5
 
   useEffect(() => {
     setMyPage(1)
-  }, [searchDebounce, filterStatus, filterDate])
+  }, [filterStatus, filterDate])
 
   const {
     data: historyData,
@@ -28,11 +27,12 @@ const Attendance = () => {
     isError: isHistoryError
   } = useFetch<AttendanceListResponse>({
     url: "/attendance/me",
-    key: ["get_mine_attendance", myPage, searchDebounce, filterStatus, filterDate],
+    key: ["get_mine_attendance", myPage, filterStatus, filterDate],
     params: {
       page: myPage,
       limit: PAGE_SIZE,
-      search: searchDebounce || undefined
+      filterDate: filterDate,
+      filterType: filterStatus === "ALL" ? undefined : filterStatus
     }
   })
 
@@ -55,7 +55,9 @@ const Attendance = () => {
         today={getTodayDateString()}
         filterStatus={filterStatus}
         filterDate={filterDate}
-        setFilterStatus={setFilterStatus}
+        setFilterStatus={(value: string) => {
+          setFilterStatus(value as AttendanceFilterType)
+        }}
         setFilterDate={setFilterDate}
       />
 

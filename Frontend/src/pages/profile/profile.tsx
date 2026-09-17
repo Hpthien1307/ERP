@@ -3,13 +3,14 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/store/useAuth"
 import { useUpdate } from "@/hooks/useUdate"
-import { showToast } from "@/utils/toast"
+import { showToast } from "@/components/ui/toast"
 import Input from "@/components/ui/input"
 import Textarea from "@/components/ui/textarea"
 import Select from "@/components/ui/select"
 import Btn from "@/components/ui/button"
 import { User, Mail, Phone, MapPin, Calendar, Building2, Camera, Save, Edit3, Clock, KeyIcon, CalendarCheck } from "lucide-react"
 import { profileSchema, type ProfileFormValidation } from "@/validators/profileValidation"
+import { getTodayDateString } from "@/utils/formatters"
 
 const GENDER_OPTIONS = [
   { value: "MALE", label: "Nam" },
@@ -321,7 +322,7 @@ const Profile = () => {
 
               <Select label="Giới tính" {...register("gender")} options={GENDER_OPTIONS} disabled={!isEditing} />
 
-              <Input label="Ngày sinh" type="date" icon={<Calendar size={18} />} {...register("birthday")} disabled={!isEditing} />
+              <Input label="Ngày sinh" max={getTodayDateString()} type="date" icon={<Calendar size={18} />} {...register("birthday")} disabled={!isEditing} />
 
               <Input
                 label="Địa chỉ liên hệ"

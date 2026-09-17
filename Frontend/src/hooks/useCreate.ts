@@ -1,6 +1,6 @@
 import { axiosClient } from "@/api/axiosClient"
 import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query"
-import { showToast } from "@/utils/toast"
+import { showToast } from "@/components/ui/toast"
 import type { AxiosError } from "axios"
 
 interface UseCreateProps {

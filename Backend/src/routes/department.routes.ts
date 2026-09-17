@@ -9,7 +9,7 @@ router.use(verifyToken)
 router.get("/department/", departmentController.getDp)
 router.get("/department/:id", departmentController.getDetailDp)
 router.post("/department", departmentController.createDp)
-router.put("/department/:id", departmentController.updateDp)
+router.patch("/department/:id", departmentController.updateDp)
 router.delete("/department/:id", departmentController.deleteDp)
 
 export default router

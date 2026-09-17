@@ -12,7 +12,7 @@ import UseDebounce from "@/hooks/useDebounce"
 import { Spinner } from "@/components/ui/spinner"
 import type { RequestFormState } from "@/validators/requestValidation"
 import { createRequestSchema } from "@/validators/requestValidation"
-import { showToast } from "@/utils/toast"
+import { showToast } from "@/components/ui/toast"
 import { useCreate } from "@/hooks/useCreate"
 import { useUpdate } from "@/hooks/useUdate"
 
@@ -22,6 +22,7 @@ import RequestHeader from "@/components/requestLayout/requestHeader"
 import RequestStats from "@/components/requestLayout/requestStats"
 import RequestFilter from "@/components/requestLayout/requestFilter"
 import RequestList from "@/components/requestLayout/requestList"
+import { getTodayDateString } from "@/utils/formatters"
 
 const RequestsList = () => {
   const PAGE_SIZE = 5
@@ -43,14 +44,13 @@ const RequestsList = () => {
   // ==== Form tạo đơn ====
   const [form, setForm] = useState<RequestFormState>({
     type: "LEAVE",
-    startDate: new Date().toISOString(),
-    endDate: new Date().toISOString(),
+    startDate: getTodayDateString(),
+    endDate: getTodayDateString(),
     reason: ""
   })
   const [errors, setErrors] = useState<Partial<Record<keyof RequestFormState, string>>>({})
   const [myPage, setMyPage] = useState(1)
   const [reviewPage, setReviewPage] = useState(1)
-
   useEffect(() => {
     setMyPage(1)
     setReviewPage(1)
@@ -109,14 +109,13 @@ const RequestsList = () => {
   // ==== Mutations ====
   const { mutate: reviewRequestMutate, isPending: isReviewing } = useUpdate({
     url: "request",
-    // khớp đúng key thật của 2 useFetch phía trên: duyệt/từ chối phải cập nhật cả 2 danh sách
-    invalidateKey: ["get_my_requests", "get_review_requests"],
+    invalidateKey: ["get_review_requests", "get_my_requests"],
     successMessage: "Xử lý đơn thành công!"
   })
 
   const { mutate: createRequest, isPending: isSubmitting } = useCreate({
     url: "/request",
-    invalidateKey: ["get_my_requests"], // khớp đúng key thật "get_my_requests"
+    invalidateKey: ["get_my_requests", "get_review_requests"],
     successMessage: "Gửi yêu cầu thành công!"
   })
 
@@ -300,6 +299,7 @@ const RequestsList = () => {
               <Input
                 label="Từ ngày *"
                 type="date"
+                min={getTodayDateString()}
                 icon={<Calendar size={18} />}
                 value={form.startDate}
                 onChange={e => setForm(prev => ({ ...prev, startDate: e.target.value }))}
@@ -309,8 +309,8 @@ const RequestsList = () => {
               <Input
                 label="Đến ngày *"
                 type="date"
+                min={form.startDate}
                 icon={<Calendar size={18} />}
-                value={form.endDate}
                 onChange={e => setForm(prev => ({ ...prev, endDate: e.target.value }))}
                 required
               />

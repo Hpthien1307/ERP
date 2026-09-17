@@ -55,10 +55,10 @@ const AttendanceList = ({ data, isLoading, isError, page, pageCount, onPageChang
               <tr className="hover:bg-slate-50/50 transition-colors" key={attendance.id}>
                 <td className="py-5 px-6 font-medium text-slate-800">{FormatDate(attendance.date)}</td>
                 <td className="py-5 px-6">
-                  <span className="flex items-center gap-x-1.5">{FormatDateTime(attendance.checkIn)}</span>
+                  <span className="flex items-center gap-x-1.5">{attendance.checkIn ? FormatDateTime(attendance.checkIn) : "--"}</span>
                 </td>
                 <td className="py-5 px-6">
-                  <span className="flex items-center gap-x-1.5">{FormatDateTime(attendance.checkOut)}</span>
+                  <span className="flex items-center gap-x-1.5">{attendance.checkOut ? FormatDateTime(attendance.checkOut) : "--"}</span>
                 </td>
                 <td className="py-5 px-6">
                   <span className="flex items-center gap-x-1.5 font-medium text-slate-800">{attendance.workingHours || "00:00"}h</span>
