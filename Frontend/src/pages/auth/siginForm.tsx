@@ -5,7 +5,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { useAuth } from "@/store/useAuth"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { signInSchema, type SignInInput } from "@/validations/siginInValidation"
+import { signInSchema, type SignInInput } from "@/validators/siginInValidation"
 
 const FormLogin = () => {
   const { signIn } = useAuth()

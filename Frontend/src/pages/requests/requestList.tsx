@@ -10,8 +10,8 @@ import { REQUEST_TYPE_OPTIONS } from "@/types/requestType"
 import useFetch from "@/hooks/useFetch"
 import UseDebounce from "@/hooks/useDebounce"
 import { Spinner } from "@/components/ui/spinner"
-import type { RequestFormState } from "@/validations/requestValidation"
-import { createRequestSchema } from "@/validations/requestValidation"
+import type { RequestFormState } from "@/validators/requestValidation"
+import { createRequestSchema } from "@/validators/requestValidation"
 import { showToast } from "@/utils/toast"
 import { useCreate } from "@/hooks/useCreate"
 import { useUpdate } from "@/hooks/useUdate"
@@ -79,10 +79,10 @@ const RequestsList = () => {
   })
 
   const myRequests = myRequestData?.data ?? []
-  const myPageCount = myRequestData?.pagination?.totalPage ?? 1
+  const myPageCount = myRequestData?.pagination?.totalPages ?? 1
 
   const pendingReviewList = reviewRequestData?.data?.filter(item => item.status === "PENDING") ?? []
-  const reviewPageCount = reviewRequestData?.pagination?.totalPage ?? 1
+  const reviewPageCount = reviewRequestData?.pagination?.totalPages ?? 1
 
   // ==== Áp dụng filter (search/type/status) trên data đã fetch ====
   const filteredMyRequests = myRequests.filter(item => {

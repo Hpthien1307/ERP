@@ -1,3 +1,5 @@
+import type { PaginationType } from "./globalType"
+
 export type RequestType = "LEAVE" | "WFH" | "OT"
 
 export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED"
@@ -51,13 +53,6 @@ type reviewer = {
 type InfoUser = {
   id: string
   fullName: string
-}
-
-type PaginationType = {
-  page: number
-  limit: number
-  total: number
-  totalPages: number
 }
 
 export type RequestItem = {

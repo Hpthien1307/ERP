@@ -9,7 +9,7 @@ import Textarea from "@/components/ui/textarea"
 import Select from "@/components/ui/select"
 import Btn from "@/components/ui/button"
 import { User, Mail, Phone, MapPin, Calendar, Building2, Camera, Save, Edit3, Clock, KeyIcon, CalendarCheck } from "lucide-react"
-import { profileSchema, type ProfileFormValidation } from "@/validations/profileValidation"
+import { profileSchema, type ProfileFormValidation } from "@/validators/profileValidation"
 
 const GENDER_OPTIONS = [
   { value: "MALE", label: "Nam" },

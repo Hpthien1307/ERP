@@ -4,6 +4,7 @@ import { prisma } from "../config/db.js"
 import { AttendanceValidation } from "../validations/attendance.validation.js"
 import { STATUS_MESSAGE } from "../constant/systemMessage.js"
 import type { AuthRequest } from "../middlewares/auth.middleware.js"
+import { calculateAttendanceCounts, calculateAbsentDays } from "../utils/attendanceStats.util.js"
 
 // Hàm tiện ích: Lấy mốc bắt đầu (00:00:00) và kết thúc (23:59:59.999) của ngày hiện tại
 const getDayRange = (dateInput = new Date()) => {
@@ -118,15 +119,42 @@ export class AttendanceController {
     }
   }
 
+  // LẤY TRẠNG THÁI CHẤM CÔNG HÔM NAY
+  public getTodayStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId
+
+      if (!userId) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          message: "Không xác định được danh tính người dùng"
+        })
+      }
+
+      const { startOfDay, endOfDay } = getDayRange()
+
+      // Tìm bản ghi chấm công của hôm nay (nếu có)
+      const todayAttendance = await prisma.attendance.findFirst({
+        where: {
+          userId,
+          date: { gte: startOfDay, lte: endOfDay }
+        }
+      })
+
+      return res.status(StatusCodes.OK).json({
+        message: STATUS_MESSAGE.STATUS_OK,
+        data: todayAttendance
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
   // XEM LỊCH SỬ CHẤM CÔNG CÁ NHÂN
   public getMyAttendance = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.userId
-      console.log(userId)
       if (!userId) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({
-          message: "Yêu cầu đăng nhập"
-        })
+        return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Yêu cầu đăng nhập" })
       }
 
       const queryValidation = AttendanceValidation.getHistory.safeParse(req.query)
@@ -137,27 +165,72 @@ export class AttendanceController {
         })
       }
 
-      const { month, year } = queryValidation.data
+      const { month, year, page, limit, search } = queryValidation.data
+      const skip = (page - 1) * limit
+
       const whereCondition: any = { userId }
 
-      // Nếu có truyền month và year (hoặc mặc định tháng/năm hiện tại)
-      if (month && year) {
+      if (search) {
+        const targetDate = new Date(search)
+        const startOfDay = new Date(targetDate)
+        startOfDay.setHours(0, 0, 0, 0)
+        const endOfDay = new Date(targetDate)
+        endOfDay.setHours(23, 59, 59, 999)
+
+        whereCondition.date = { gte: startOfDay, lte: endOfDay }
+      } else if (month && year) {
         const startOfMonth = new Date(year, month - 1, 1)
         const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
-        whereCondition.date = {
-          gte: startOfMonth,
-          lte: endOfMonth
-        }
+        whereCondition.date = { gte: startOfMonth, lte: endOfMonth }
       }
 
-      const attendances = await prisma.attendance.findMany({
-        where: whereCondition,
-        orderBy: { date: "desc" }
-      })
+      const [attendances, total] = await Promise.all([
+        prisma.attendance.findMany({
+          where: whereCondition,
+          orderBy: { date: "desc" },
+          skip,
+          take: limit
+        }),
+        prisma.attendance.count({ where: whereCondition })
+      ])
 
       return res.status(StatusCodes.OK).json({
         message: STATUS_MESSAGE.STATUS_OK,
-        data: attendances
+        data: attendances,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  // XEM THỐNG KÊ CHẤM CÔNG CÁ NHÂN
+  public getMyAttendanceStats = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId!
+      const now = new Date()
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+
+      const [attendances, approvedLeaves] = await Promise.all([
+        prisma.attendance.findMany({ where: { userId, date: { gte: startOfMonth, lte: endOfMonth } } }),
+        prisma.request.findMany({
+          where: {
+            userId,
+            type: "LEAVE",
+            status: "APPROVED",
+            startDate: { lte: endOfMonth },
+            endDate: { gte: startOfMonth }
+          }
+        })
+      ])
+
+      const { onTime, late, avgWorkingHours } = calculateAttendanceCounts(attendances)
+      const absent = calculateAbsentDays(startOfMonth, endOfMonth, attendances, approvedLeaves)
+
+      return res.status(StatusCodes.OK).json({
+        message: STATUS_MESSAGE.STATUS_OK,
+        data: { onTime, late, absent, avgWorkingHours }
       })
     } catch (error) {
       next(error)

@@ -41,9 +41,9 @@ const ReviewRequestTable = ({
               <th className="py-4.5 px-6 text-center">Hành động</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-2xl text-slate-700">
+          <tbody className="relative divide-y divide-slate-100 text-2xl text-slate-700">
             {isPending && (
-              <tr>
+              <tr className="absolute top-1/2 left-1/2 -translate-1/2">
                 <td colSpan={5} className="py-16 text-center">
                   <Spinner className="size-16" />
                 </td>

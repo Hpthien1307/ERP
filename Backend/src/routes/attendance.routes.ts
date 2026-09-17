@@ -10,7 +10,9 @@ router.use(verifyToken)
 // Các route cá nhân
 router.post("/attendance/check-in", controller.checkIn)
 router.post("/attendance/check-out", controller.checkOut)
+router.get("/attendance/today", controller.getTodayStatus)
 router.get("/attendance/me", controller.getMyAttendance)
+router.get("/attendance/me/stats", controller.getMyAttendanceStats)
 
 // Route quản lý (Admin / Manager)
 router.get("/attendance", requireRole("ADMIN", "MANAGER"), controller.getAll)
