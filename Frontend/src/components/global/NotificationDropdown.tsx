@@ -103,11 +103,6 @@ const NotificationDropdown = () => {
       // REDIRECT
       // ============================
 
-      if (notification.requestId) {
-        navigate(`/request/${notification.requestId}`)
-        return
-      }
-
       if (notification.taskId) {
         navigate(`/task/${notification.taskId}`)
         return

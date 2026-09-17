@@ -24,6 +24,25 @@ export const TABLE_COLUMNS = [
   { value: "ACTION", label: "Hành động" }
 ]
 
+export const REQUEST_STATS_DATA = [
+  {
+    value: "total",
+    label: "Tổng số đơn"
+  },
+  {
+    value: "pending",
+    label: "Chờ phê duyệt"
+  },
+  {
+    value: "approved",
+    label: "Đã phê duyệt"
+  },
+  {
+    value: "rejected",
+    label: "Bị từ chối"
+  }
+]
+
 type reviewer = {
   id: string
   fullName: string
@@ -32,6 +51,13 @@ type reviewer = {
 type InfoUser = {
   id: string
   fullName: string
+}
+
+type PaginationType = {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
 }
 
 export type RequestItem = {
@@ -48,4 +74,10 @@ export type RequestItem = {
   reviewer?: reviewer | null
   rejectReason?: string | null
   createdAt: string
+}
+
+export type PaginatedRequestResponse = {
+  messages: string
+  data: RequestItem[]
+  pagination: PaginationType
 }

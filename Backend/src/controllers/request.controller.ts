@@ -5,37 +5,44 @@ import { StatusCodes } from "http-status-codes"
 import { RequestValidation } from "../validations/request.validation.js"
 import type { AuthRequest } from "../middlewares/auth.middleware.js"
 import { createNotification, NotificationType } from "../services/notification.service.js"
-import { io } from "../server.js"
+import { getPaginationParams, buildPaginationResponse } from "../utils/pagination.util.js"
 
 export class RequestController {
   public getRequest = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const getRequest = await prisma.request.findMany({
-        orderBy: {
-          createdAt: "desc"
-        },
-        omit: {
-          reviewedBy: true
-        },
-        include: {
-          reviewer: {
-            select: {
-              id: true,
-              fullName: true
-            }
+      const { page, limit, skip } = getPaginationParams(req)
+      const [data, total] = await Promise.all([
+        prisma.request.findMany({
+          orderBy: {
+            createdAt: "desc"
           },
-          user: {
-            select: {
-              id: true,
-              fullName: true
+          skip,
+          take: limit,
+          omit: {
+            reviewedBy: true
+          },
+          include: {
+            reviewer: {
+              select: {
+                id: true,
+                fullName: true
+              }
+            },
+            user: {
+              select: {
+                id: true,
+                fullName: true
+              }
             }
           }
-        }
-      })
+        }),
+        prisma.request.count()
+      ])
 
       return res.status(StatusCodes.OK).json({
         message: STATUS_MESSAGE.STATUS_OK,
-        data: getRequest
+        data,
+        pagination: buildPaginationResponse(page, limit, total)
       })
     } catch (error) {
       next(error)
@@ -76,6 +83,16 @@ export class RequestController {
   public getManagedRequests = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const currentUserId = req.userId!
+      const queryValidation = RequestValidation.getPaginatedRequest.safeParse(req.query)
+      if (!queryValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: queryValidation.error.flatten().fieldErrors
+        })
+      }
+
+      const { page, limit, search, type, status } = queryValidation.data
+      const skip = (page - 1) * limit
 
       const currentUser = await prisma.user.findUnique({
         where: { id: currentUserId },
@@ -93,35 +110,48 @@ export class RequestController {
         })
       }
 
-      const getRequest = await prisma.request.findMany({
-        where: {
+      const whereCondition = {
+        status: status ?? "PENDING", // mặc định PENDING nếu không truyền status khác
+        ...(type && { type }),
+        ...(search && { reason: { contains: search, mode: "insensitive" as const } }),
+        ...(currentUser.role !== "ADMIN" && {
           user: { departmentId: currentUser.managedDepartment?.id ?? "__NO_DEPARTMENT__" }
-        },
-        orderBy: {
-          createdAt: "desc"
-        },
-        omit: {
-          reviewedBy: true
-        },
-        include: {
-          reviewer: {
-            select: {
-              id: true,
-              fullName: true
-            }
+        })
+      }
+
+      const [data, total] = await Promise.all([
+        await prisma.request.findMany({
+          where: whereCondition,
+          orderBy: {
+            createdAt: "desc"
           },
-          user: {
-            select: {
-              id: true,
-              fullName: true
+          skip,
+          take: limit,
+          omit: {
+            reviewedBy: true
+          },
+          include: {
+            reviewer: {
+              select: {
+                id: true,
+                fullName: true
+              }
+            },
+            user: {
+              select: {
+                id: true,
+                fullName: true
+              }
             }
           }
-        }
-      })
+        }),
+        prisma.request.count({ where: whereCondition })
+      ])
 
       return res.status(StatusCodes.OK).json({
         message: STATUS_MESSAGE.STATUS_OK,
-        data: getRequest
+        data,
+        pagination: buildPaginationResponse(page, limit, total)
       })
     } catch (error) {
       next(error)
@@ -130,36 +160,42 @@ export class RequestController {
 
   public getUserRequest = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const getRequestData = await prisma.request.findMany({
-        where: {
-          userId: req.userId
-        },
-        include: {
-          reviewer: {
-            select: {
-              fullName: true
-            }
-          },
-          user: {
-            select: {
-              fullName: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: "desc"
-        }
-      })
-
-      if (!getRequestData) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-          message: "Không tìm thấy đơn yêu cầu của bạn"
+      const queryValidation = RequestValidation.getPaginatedRequest.safeParse(req.query)
+      if (!queryValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: queryValidation.error.flatten().fieldErrors
         })
       }
 
+      const { page, limit, search, type, status } = queryValidation.data
+      const skip = (page - 1) * limit
+
+      const whereCondition = {
+        userId: req.userId,
+        ...(type && { type }),
+        ...(status && { status }),
+        ...(search && { reason: { contains: search, mode: "insensitive" as const } })
+      }
+
+      const [data, total] = await Promise.all([
+        prisma.request.findMany({
+          where: whereCondition,
+          include: {
+            reviewer: { select: { fullName: true } },
+            user: { select: { fullName: true } }
+          },
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit
+        }),
+        prisma.request.count({ where: whereCondition })
+      ])
+
       return res.status(StatusCodes.OK).json({
         message: STATUS_MESSAGE.STATUS_OK,
-        data: getRequestData
+        data,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }
       })
     } catch (error) {
       next(error)
@@ -326,17 +362,6 @@ export class RequestController {
         return request
       })
 
-      // io.to(existingRequest.userId).emit("request_reviewed", {
-      //   requestId: updatedRequest.id,
-      //   status: updatedRequest.status,
-      //   rejectReason: updatedRequest.rejectReason,
-      //   message:
-      //     status === "APPROVED"
-      //       ? "Đơn yêu cầu của bạn đã được phê duyệt"
-      //       : `Đơn yêu cầu của bạn đã bị từ chối${rejectReason ? `: ${rejectReason}` : ""}`,
-      //   reviewedAt: new Date()
-      // })
-
       await createNotification({
         userId: existingRequest.userId,
 
@@ -352,7 +377,6 @@ export class RequestController {
         requestId: updatedRequest.id
       })
 
-      // 6. Phản hồi kết quả
       return res.status(StatusCodes.OK).json({
         message: status === "APPROVED" ? "Phê duyệt đơn thành công" : "Từ chối đơn thành công",
         data: updatedRequest

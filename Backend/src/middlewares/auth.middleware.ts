@@ -58,7 +58,6 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
       const cookieOptions = getCookieOptions()
       res.clearCookie("accessToken", cookieOptions)
       res.clearCookie("refreshToken", cookieOptions)
-      console.log("true delete cookie")
       return res.status(StatusCodes.UNAUTHORIZED).json({
         message: "Người dùng không tồn tại hoặc phiên đăng nhập đã hết hạn"
       })

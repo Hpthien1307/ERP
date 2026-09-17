@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { publicRoutes, privateRoutes } from "./routes"
 import ProtectedRoute from "./routes/protectedRoute"
-import AdminLayout from "./components/layout/adminLayout"
+import AdminLayout from "./components/global/adminLayout"
 import { useEffect } from "react"
 import { useAuth } from "./store/useAuth"
 import { socket } from "./lib/socket"

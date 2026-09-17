@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Btn from "@/components/ui/button"
 import Input from "@/components/ui/input"
 import Select from "@/components/ui/select"
@@ -23,10 +23,12 @@ import RequestStats from "@/components/requestLayout/requestStats"
 import RequestFilter from "@/components/requestLayout/requestFilter"
 import RequestList from "@/components/requestLayout/requestList"
 
+const PAGE_SIZE = 10
+
 const RequestsList = () => {
-  const PAGE_SIZE = 5
   const { user } = useAuth()
   const isManagerOrAdmin = user?.role === "MANAGER" || user?.role === "ADMIN"
+
   // ==== Tab & filter state ====
   const [activeTab, setActiveTab] = useState<"review" | "mine">("review")
   const [search, setSearch] = useState("")
@@ -48,13 +50,10 @@ const RequestsList = () => {
     reason: ""
   })
   const [errors, setErrors] = useState<Partial<Record<keyof RequestFormState, string>>>({})
+
+  // ==== Phân trang: tiền tố "my" cho "Đơn của tôi", "review" cho "Đơn cần duyệt" ====
   const [myPage, setMyPage] = useState(1)
   const [reviewPage, setReviewPage] = useState(1)
-
-  useEffect(() => {
-    setMyPage(1)
-    setReviewPage(1)
-  }, [searchDebounce, selectedType, selectedStatus])
 
   // ==== Fetch "Đơn của tôi" ====
   const {
@@ -63,14 +62,8 @@ const RequestsList = () => {
     error: myRequestError
   } = useFetch<PaginatedRequestResponse>({
     url: `/request/user/${user?.id}`,
-    key: ["get_my_requests", myPage, searchDebounce, selectedType, selectedStatus],
-    params: {
-      page: myPage,
-      limit: PAGE_SIZE,
-      search: searchDebounce || undefined,
-      type: selectedType !== "ALL" ? selectedType : undefined,
-      status: selectedStatus !== "ALL" ? selectedStatus : undefined
-    }
+    key: ["get_my_requests", myPage],
+    params: { page: myPage, limit: PAGE_SIZE }
   })
 
   // ==== Fetch "Đơn cần duyệt" (chỉ Manager/Admin, chỉ khi đang mở tab review) ====
@@ -80,24 +73,31 @@ const RequestsList = () => {
     error: reviewRequestError
   } = useFetch<PaginatedRequestResponse>({
     url: "/request/manager",
-    key: ["get_review_requests", reviewPage, searchDebounce, selectedType, selectedStatus],
+    key: ["get_review_requests", reviewPage],
     enabled: isManagerOrAdmin && activeTab === "review",
-    params: {
-      page: reviewPage,
-      limit: PAGE_SIZE,
-      search: searchDebounce || undefined,
-      type: selectedType !== "ALL" ? selectedType : undefined,
-      status: selectedStatus !== "ALL" ? selectedStatus : undefined
-    }
+    params: { page: reviewPage, limit: PAGE_SIZE }
   })
 
-  // Không còn filter thủ công nữa — data BE trả về đã đúng theo search/type/status
-
   const myRequests = myRequestData?.data ?? []
-  const myPageCount = myRequestData?.pagination?.totalPages ?? 1
+  const myPageCount = myRequestData?.pagination?.totalPage ?? 1
 
-  const reviewRequests = reviewRequestData?.data ?? []
-  const reviewPageCount = reviewRequestData?.pagination?.totalPages ?? 1
+  const pendingReviewList = reviewRequestData?.data?.filter(item => item.status === "PENDING") ?? []
+  const reviewPageCount = reviewRequestData?.pagination?.totalPage ?? 1
+
+  // ==== Áp dụng filter (search/type/status) trên data đã fetch ====
+  const filteredMyRequests = myRequests.filter(item => {
+    const matchSearch = item?.reason?.toLowerCase().includes(searchDebounce.toLowerCase())
+    const matchType = selectedType === "ALL" || item?.type === selectedType
+    const matchStatus = selectedStatus === "ALL" || item?.status === selectedStatus
+    return matchSearch && matchType && matchStatus
+  })
+
+  const filteredReviewRequests = pendingReviewList.filter(item => {
+    const matchSearch = item?.reason?.toLowerCase().includes(searchDebounce.toLowerCase())
+    const matchType = selectedType === "ALL" || item?.type === selectedType
+    const matchStatus = selectedStatus === "ALL" || item?.status === selectedStatus
+    return matchSearch && matchType && matchStatus
+  })
 
   const stats = {
     total: myRequests.length,
@@ -220,10 +220,10 @@ const RequestsList = () => {
   return (
     <div className="max-w-full mx-auto flex flex-col gap-y-8 pb-16">
       <RequestHeader
-        pendingReviewList={reviewRequestData?.data ?? []}
+        pendingReviewList={pendingReviewList}
         activeTab={activeTab}
-        setActiveTab={tab => {
-          setActiveTab(tab as "review" | "mine")
+        setActiveTab={() => {
+          setActiveTab("review")
         }}
         isManagerOrAdmin={isManagerOrAdmin}
         setIsCreateModalOpen={setIsCreateModalOpen}
@@ -247,7 +247,7 @@ const RequestsList = () => {
         myTableProps={{
           isPending: isMyRequestPending,
           error: myRequestError,
-          items: myRequests,
+          items: filteredMyRequests,
           renderTypeBadge,
           renderStatusBadge,
           onViewDetail: setSelectedDetail,
@@ -258,7 +258,7 @@ const RequestsList = () => {
         reviewTableProps={{
           isPending: isReviewRequestPending,
           error: reviewRequestError,
-          items: reviewRequests,
+          items: filteredReviewRequests,
           isReviewing,
           onApprove: handleApprove,
           onReject: handleOpenReject,

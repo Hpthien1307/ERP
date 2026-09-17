@@ -4,8 +4,7 @@ import Input from "@/components/ui/input"
 import Select from "@/components/ui/select"
 import useFetch from "@/hooks/useFetch"
 import type { AttItem } from "@/types/attendanceType"
-import { useEffect, useState } from "react"
-import UseDebounce from "@/hooks/useDebounce"
+import { useEffect } from "react"
 
 const Attendance = () => {
   const {
@@ -20,23 +19,6 @@ const Attendance = () => {
   useEffect(() => {
     console.log("att data", attData)
   }, [attData])
-
-  const [search, setSearch] = useState("")
-  const [selectedType, setSelectedType] = useState("ALL")
-  const [selectedStatus, setSelectedStatus] = useState("ALL")
-  const searchDebounce = UseDebounce(search, 500)
-
-  // State Modal tạo đơn mới
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [selectedDetail, setSelectedDetail] = useState<AttItem | null>(null)
-
-  const stats = {
-    total: attData?.data?.length || 0,
-    checkIn: attData?.data?.filter(r => r.checkIn !== null).length || 0,
-    checkOut: attData?.data?.filter(r => r.checkOut !== null).length || 0,
-    date: attData?.data?.filter(r => r.date !== null).length || null,
-    workHours: attData?.data?.filter(r => r.workingHours !== null).reduce((acc, r) => acc + r.workingHours, 0) || 0
-  }
 
   return (
     <div className="max-w-full mx-auto flex flex-col gap-y-8 pb-16">
@@ -60,9 +42,9 @@ const Attendance = () => {
 
         <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           {/* Đồng hồ + ngày */}
-          <div className="flex flex-col gap-y-2">
-            <span className="text-blue-100 text-2xl font-medium">Chủ Nhật, 13/09/2026</span>
-            <span className="text-white text-6xl sm:text-7xl font-bold tracking-tight tabular-nums">08:42:15</span>
+          <div className="flex flex-col gap-y-4">
+            <span className="text-blue-100 text-md font-medium">{new Date().toLocaleDateString("vi-VN")}</span>
+            <span className="text-white text-xg sm:text-7xl font-bold tracking-tight tabular-nums">{new Date().toLocaleTimeString("vi-VN")}</span>
           </div>
 
           {/* Trạng thái + nút chấm công */}

@@ -1,4 +1,4 @@
-import Login from "@/pages/auth/siginin"
+import Login from "@/pages/auth/siginIn"
 import Attendance from "@/pages/attendance/attendance"
 import Dashboard from "@/pages/dashboard/dashboard"
 import Profile from "@/pages/profile/profile"

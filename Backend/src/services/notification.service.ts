@@ -32,17 +32,6 @@ export const createNotification = async ({ userId, type, title, message, request
     }
   })
 
-  // io.to(userId).emit("notification", {
-  //   id: notification.id,
-  //   type: notification.type,
-  //   title: notification.title,
-  //   message: notification.message,
-  //   requestId: notification.requestId,
-  //   taskId: notification.taskId,
-  //   isRead: notification.isRead,
-  //   createdAt: notification.createdAt
-  // })
-
   io.to(userId).emit("notification", notification)
 
   return notification

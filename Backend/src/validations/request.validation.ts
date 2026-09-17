@@ -34,6 +34,15 @@ const ReviewRequest = z
   )
 
 export const RequestValidation = {
+  // validations/request.validation.ts
+  getPaginatedRequest: z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(10),
+    search: z.string().optional(),
+    type: z.enum(["LEAVE", "WFH", "OT"]).optional(),
+    status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional()
+  }),
+
   createRequest: BaseRequest.refine(data => data.endDate >= data.startDate, {
     message: "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu",
     path: ["endDate"]
