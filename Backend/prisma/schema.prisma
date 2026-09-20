@@ -1,9 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider  = "prisma-client-js"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 datasource db {
-  provider = "postgresql" // Hoặc mysql tùy theo CSDL bạn dùng
+  provider = "postgresql"
 }
 
 enum role_type {
@@ -32,7 +34,7 @@ enum task_status {
 }
 
 enum priority_level {
-  LOW
+  NORMAL
   MEDIUM
   HIGH
 }
@@ -150,7 +152,7 @@ model task {
   title       String         @unique
   description String?
   status      task_status    @default(TODO)
-  priority    priority_level @default(LOW)
+  priority    priority_level @default(NORMAL)
 
   assigneeId String
   assignee   user   @relation("AssigneeTasks", fields: [assigneeId], references: [id], onDelete: Cascade)
