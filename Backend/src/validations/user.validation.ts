@@ -5,17 +5,17 @@ import { FIELD_MESSAGE } from "../constant/systemMessage.js"
 const BaseUserSchema = z.object({
   email: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).email("Email không đúng định dạng").toLowerCase().trim(),
   password: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
-  fullName: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(1, FIELD_MESSAGE.FIELD_REQUIRE).trim(),
   avatarUrl: z.string().url("URL hình ảnh không hợp lệ").nullable().optional(),
+  fullName: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(1, FIELD_MESSAGE.FIELD_REQUIRE).trim(),
   gender: z.nativeEnum(gender_type).optional(),
   birthday: z.preprocess(val => (val === "" || val === undefined ? null : val), z.coerce.date().nullable().optional()),
   role: z.nativeEnum(role_type),
+  phone: z.string().nullable().optional(),
   address: z.string().optional(),
   bio: z.string().optional(),
+  leaveBalance: z.number().int().nonnegative(),
   departmentId: z.string().uuid().optional().nullable(),
-  positionId: z.string().uuid().optional().nullable(),
-  phone: z.string().nullable().optional(),
-  leaveBalance: z.number().int().nonnegative()
+  positionId: z.string().uuid().optional().nullable()
 })
 
 const BaseUserId = z.object({

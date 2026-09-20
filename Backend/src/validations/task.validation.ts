@@ -7,17 +7,26 @@ const taskId = z.object({
 })
 
 const BaseTasks = z.object({
-  title: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(1, "Tiêu đề công việc là bắt buộc").trim(),
-  description: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(1, "Mô tả công việc là bắt buộc").trim(),
+  title: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(1, "Tiêu đề công việc là bắt buộc").trim().optional(),
+  description: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(1, "Mô tả công việc là bắt buộc").trim().optional(),
   status: z.nativeEnum(task_status).default(task_status.TODO),
   priority: z.nativeEnum(priority_level).default(priority_level.LOW),
-  assigneeId: z.string().uuid("assigneeId phải là UUID hợp lệ"),
-  creatorId: z.string().uuid("creatorId phải là UUID hợp lệ"),
+  assigneeId: z.string().uuid("assigneeId phải là UUID hợp lệ").optional(),
+  creatorId: z.string().uuid("creatorId phải là UUID hợp lệ").optional(),
   departmentId: z.string().uuid().optional().nullable(),
-  dueDate: z.coerce.date({ message: "Hạn hoàn thành (dueDate) không hợp lệ" })
+  dueDate: z.coerce.date({ message: "Hạn hoàn thành (dueDate) không hợp lệ" }).optional()
 })
 
 export const TaskValidation = {
+  getPaginatedTask: z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(10),
+    search: z.string().optional(),
+    priority: z.nativeEnum(priority_level).optional(),
+    assigneeId: z.string().uuid("assigneeId phải là UUID hợp lệ").optional(),
+    status: z.nativeEnum(task_status).optional()
+  }),
+
   getTaskId: taskId,
 
   createTask: BaseTasks,

@@ -127,7 +127,19 @@ export class AuthController {
         },
         include: {
           department: {
-            select: { id: true, title: true }
+            select: {
+              id: true,
+              title: true,
+              users: {
+                select: {
+                  id: true,
+                  fullName: true,
+                  email: true,
+                  role: true,
+                  avatarUrl: true
+                }
+              }
+            }
           },
           position: {
             select: { id: true, title: true }

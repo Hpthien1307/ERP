@@ -1,3 +1,6 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateEnum
 CREATE TYPE "role_type" AS ENUM ('ADMIN', 'MANAGER', 'EMPLOYEE');
 
@@ -8,7 +11,7 @@ CREATE TYPE "request_type" AS ENUM ('LEAVE', 'WFH', 'OT');
 CREATE TYPE "request_status" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- CreateEnum
-CREATE TYPE "task_status" AS ENUM ('TODO', 'IN_PROGRESS', 'DONE');
+CREATE TYPE "task_status" AS ENUM ('TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED');
 
 -- CreateEnum
 CREATE TYPE "priority_level" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
@@ -17,26 +20,7 @@ CREATE TYPE "priority_level" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
 CREATE TYPE "gender_type" AS ENUM ('MALE', 'FEMALE', 'OTHER');
 
 -- CreateEnum
-CREATE TYPE "attendance_status" AS ENUM ('ON_TIME', 'LATE', 'ABSENT', 'ON_LEAVE');
-
--- CreateTable
-CREATE TABLE "departments" (
-    "id" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "managerId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "departments_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "positions" (
-    "id" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "positions_pkey" PRIMARY KEY ("id")
-);
+CREATE TYPE "attendance_status" AS ENUM ('ALL', 'ON_TIME', 'LATE', 'ABSENT', 'LEAVE');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -60,14 +44,33 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
+CREATE TABLE "departments" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "managerId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "departments_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "positions" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "positions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "attendances" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "date" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
     "checkIn" TIMESTAMP(3),
     "checkOut" TIMESTAMP(3),
     "workingHours" DOUBLE PRECISION,
-    "status" "attendance_status" NOT NULL DEFAULT 'ON_TIME',
+    "status" "attendance_status" NOT NULL DEFAULT 'ALL',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "attendances_pkey" PRIMARY KEY ("id")
@@ -95,7 +98,7 @@ CREATE TABLE "tasks" (
     "title" TEXT NOT NULL,
     "description" TEXT,
     "status" "task_status" NOT NULL DEFAULT 'TODO',
-    "priority" "priority_level" NOT NULL DEFAULT 'MEDIUM',
+    "priority" "priority_level" NOT NULL DEFAULT 'LOW',
     "assigneeId" TEXT NOT NULL,
     "creatorId" TEXT NOT NULL,
     "departmentId" TEXT,
@@ -133,6 +136,9 @@ CREATE TABLE "Notification" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "users_email_birthday_phone_departmentId_positionId_key" ON "users"("email", "birthday", "phone", "departmentId", "positionId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "departments_title_key" ON "departments"("title");
 
 -- CreateIndex
@@ -140,9 +146,6 @@ CREATE UNIQUE INDEX "departments_managerId_key" ON "departments"("managerId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "positions_title_key" ON "positions"("title");
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "attendances_userId_date_key" ON "attendances"("userId", "date");
@@ -160,13 +163,13 @@ CREATE INDEX "Notification_userId_isRead_idx" ON "Notification"("userId", "isRea
 CREATE INDEX "Notification_userId_createdAt_idx" ON "Notification"("userId", "createdAt");
 
 -- AddForeignKey
-ALTER TABLE "departments" ADD CONSTRAINT "departments_managerId_fkey" FOREIGN KEY ("managerId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "departments"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_positionId_fkey" FOREIGN KEY ("positionId") REFERENCES "positions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "departments" ADD CONSTRAINT "departments_managerId_fkey" FOREIGN KEY ("managerId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "attendances" ADD CONSTRAINT "attendances_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

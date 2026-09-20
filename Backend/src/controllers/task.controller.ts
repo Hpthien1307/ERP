@@ -4,13 +4,59 @@ import { prisma } from "../config/db.js"
 import { TaskValidation } from "../validations/task.validation.js"
 import { STATUS_MESSAGE } from "../constant/systemMessage.js"
 import { io } from "../server.js"
+import type { AuthRequest } from "../middlewares/auth.middleware.js"
+import { createNotification, NotificationType } from "../services/notification.service.js"
 
 export class TaskController {
   public getTask = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const queryValidation = TaskValidation.getPaginatedTask.safeParse(req.query)
+      if (!queryValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: queryValidation.error.flatten().fieldErrors
+        })
+      }
+      const { page, limit, search, priority, status, assigneeId } = queryValidation.data
+      const skip = (page - 1) * limit
+      const whereCondition = {
+        ...(status && { status }),
+        ...(priority && { priority }),
+        ...(assigneeId && { assigneeId }),
+        ...(search && {
+          title: {
+            contains: search,
+            mode: "insensitive" as const
+          }
+        })
+      }
+
       const getTask = await prisma.task.findMany({
+        where: whereCondition,
+        skip,
+        take: limit,
         orderBy: {
           createdAt: "desc"
+        },
+        omit: {
+          assigneeId: true,
+          creatorId: true,
+          departmentId: true,
+          createdAt: true
+        },
+        include: {
+          assignee: {
+            select: {
+              id: true,
+              fullName: true
+            }
+          },
+          creator: {
+            select: {
+              id: true,
+              fullName: true
+            }
+          }
         }
       })
       return res.status(StatusCodes.OK).json({
@@ -21,6 +67,7 @@ export class TaskController {
       next(error)
     }
   }
+
   public getDetailTask = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const idValidation = TaskValidation.getTaskId.safeParse(req.params)
@@ -51,7 +98,81 @@ export class TaskController {
       next(error)
     }
   }
-  public createTask = async (req: Request, res: Response, next: NextFunction) => {
+
+  public getMyTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId!
+      const queryValidation = TaskValidation.getPaginatedTask.safeParse(req.query)
+      if (!queryValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: queryValidation.error.flatten().fieldErrors
+        })
+      }
+      const { page, limit, search, priority, status, assigneeId } = queryValidation.data
+      const skip = (page - 1) * limit
+
+      const whereCondition = {
+        assigneeId: userId,
+        ...(status && { status }),
+        ...(priority && { priority }),
+        ...(assigneeId && { assigneeId }),
+        ...(search && {
+          title: {
+            contains: search,
+            mode: "insensitive" as const // Tìm kiếm không phân biệt hoa/thường (Postgres)
+          }
+        })
+      }
+
+      const [myTasks, total] = await Promise.all([
+        prisma.task.findMany({
+          where: whereCondition,
+          skip,
+          take: limit,
+          orderBy: {
+            createdAt: "desc"
+          },
+          omit: {
+            assigneeId: true,
+            creatorId: true,
+            departmentId: true,
+            createdAt: true
+          },
+          include: {
+            assignee: {
+              select: {
+                id: true,
+                fullName: true
+              }
+            },
+            creator: {
+              select: { id: true, fullName: true }
+            },
+            department: {
+              select: { id: true, title: true }
+            }
+          }
+        }),
+        prisma.task.count({ where: whereCondition })
+      ])
+
+      return res.status(StatusCodes.OK).json({
+        message: STATUS_MESSAGE.STATUS_OK,
+        data: myTasks,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  public createTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const bodyValidation = TaskValidation.createTask.safeParse(req.body)
       if (!bodyValidation.success) {
@@ -62,13 +183,29 @@ export class TaskController {
       }
 
       const { title, description, status, priority, assigneeId, creatorId, departmentId, dueDate } = bodyValidation.data
-      const duplicateTitle = await prisma.task.findUnique({
-        where: { title }
+
+      if (title) {
+        const duplicateTitle = await prisma.task.findUnique({
+          where: { title }
+        })
+
+        if (duplicateTitle) {
+          return res.status(StatusCodes.CONFLICT).json({
+            message: "Task này đang bị tạo trùng tên"
+          })
+        }
+      }
+
+      const finalCreatorId = creatorId || req.userId!
+      const finalAssigneeId = assigneeId || finalCreatorId
+
+      const getAssignee = await prisma.user.findUnique({
+        where: { id: finalAssigneeId }
       })
 
-      if (duplicateTitle) {
-        return res.status(StatusCodes.CONFLICT).json({
-          message: "Task này đang bị tạo trùng tên"
+      if (!getAssignee) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+          message: "Người thực hiện (assignee) không tồn tại"
         })
       }
 
@@ -92,17 +229,36 @@ export class TaskController {
           description,
           status: status || "TODO",
           priority: priority || "LOW",
-          assigneeId,
-          creatorId,
+          assigneeId: finalAssigneeId,
+          creatorId: finalCreatorId,
           departmentId: departmentId || null,
-          dueDate
+          dueDate: dueDate ? new Date(dueDate) : new Date()
+        },
+        include: {
+          creator: {
+            select: {
+              id: true,
+              fullName: true
+            }
+          }
         }
       })
 
-      io.to(assigneeId).emit("task:assigneeId", {
+      io.to(finalAssigneeId).emit("task:assigneeId", {
         message: `Bạn vừa có 1 task mới: ${createData.title}`,
         task: createData
       })
+
+      // Gửi thông báo cho nhân viên (assignee) khi được giao task
+      if (finalAssigneeId !== finalCreatorId) {
+        await createNotification({
+          userId: finalAssigneeId,
+          type: NotificationType.NEW_TASK,
+          title: "Bạn có task mới",
+          message: `${createData.creator.fullName} đã giao cho bạn task "${createData.title}"`,
+          taskId: createData.id
+        })
+      }
 
       return res.status(StatusCodes.OK).json({
         message: STATUS_MESSAGE.STATUS_CREATE,
@@ -112,6 +268,7 @@ export class TaskController {
       next(error)
     }
   }
+
   public updateTask = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const idValidation = TaskValidation.getTaskId.safeParse(req.params)
@@ -144,6 +301,7 @@ export class TaskController {
       next(error)
     }
   }
+
   public deleteTask = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const idValidation = TaskValidation.getTaskId.safeParse(req.params)

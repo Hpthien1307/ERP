@@ -104,7 +104,7 @@ export class UserController {
         createUser.data
 
       const duplicate = await prisma.user.findUnique({
-        where: { email }
+        where: { email: email }
       })
 
       if (duplicate) {
