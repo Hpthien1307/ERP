@@ -12,7 +12,7 @@ import useFetch from "@/hooks/useFetch"
 import { type AttendanceFilterType } from "@/types/attendanceType"
 
 const Attendance = () => {
-  const [filterDate, setFilterDate] = useState<string>(getTodayDateString())
+  const [filterDate, setFilterDate] = useState<string>("")
   const [filterStatus, setFilterStatus] = useState<AttendanceFilterType>("ALL")
   const [myPage, setMyPage] = useState<number>(1)
   const PAGE_SIZE = 5

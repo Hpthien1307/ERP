@@ -2,10 +2,12 @@ import WrapperMain from "@/components/wrapper/wrapperMain"
 import FormLogin from "./siginForm"
 import { useAuth } from "@/store/useAuth"
 import { Navigate } from "react-router-dom"
+import { navigations } from "@/components/sidebars/navigations"
 const Login = () => {
+  const goLink = navigations[0].link
   const { isAuthenticated } = useAuth()
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to={goLink} replace />
   }
   return (
     <WrapperMain classCustom="page-login">

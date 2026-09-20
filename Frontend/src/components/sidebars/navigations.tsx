@@ -1,4 +1,4 @@
-import { User, LayoutDashboard, ScrollText, ClockCheck, NotepadText } from "lucide-react"
+import { User, ScrollText, ClockCheck, NotepadText } from "lucide-react"
 import type React from "react"
 
 type sideBarConfig = {
@@ -9,19 +9,14 @@ type sideBarConfig = {
 
 export const navigations: sideBarConfig[] = [
   {
-    icon: <LayoutDashboard size={20} />,
-    title: "Tổng quan",
-    link: "/dashboard"
-  },
-  {
-    icon: <ScrollText size={20} />,
-    title: "Công việc của tôi",
-    link: "/my-tasks"
-  },
-  {
     icon: <ClockCheck size={20} />,
     title: "Chấm công",
     link: "/attendance"
+  },
+  {
+    icon: <ScrollText size={20} />,
+    title: "Quản lý công việc",
+    link: "/my-tasks"
   },
   {
     icon: <NotepadText size={20} />,

@@ -1,6 +1,5 @@
 import Login from "@/pages/auth/siginIn"
 import Attendance from "@/pages/attendance/attendance"
-import Dashboard from "@/pages/dashboard/dashboard"
 import Profile from "@/pages/profile/profile"
 import Requests from "@/pages/requests/request"
 import Tasks from "@/pages/tasks/tasks"
@@ -22,10 +21,7 @@ const privateRoutes: RouteConfig[] = [
     path: "/attendance",
     component: Attendance
   },
-  {
-    path: "/dashboard",
-    component: Dashboard
-  },
+
   {
     path: "/profile",
     component: Profile

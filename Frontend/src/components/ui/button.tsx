@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 import { Link } from "react-router-dom"
 import { Loader2 } from "lucide-react"
 
-type BtnVariantProps = "default" | "primary" | "white" | "center"
+type BtnVariantProps = "default" | "primary" | "white" | "center" | "error" | "success"
 type BtnSizeProps = "default" | "large"
 
 type BtnProps = {
@@ -30,7 +30,9 @@ const btnVariants = cva(
         primary:
           "bg-[var(--color-pri)] border border-[var(--color-pri)] text-white hover:bg-[var(--color-pri-hover)] hover:border-[var(--color-pri-hover)] shadow-lg shadow-blue-500/25 active:scale-[0.99]",
         white: "bg-white border border-white text-[var(--color-pri)] hover:bg-[var(--color-pri)] hover:text-white",
-        center: "mx-auto"
+        center: "mx-auto",
+        error: "bg-rose-600 hover:bg-rose-700 text-white",
+        success: "bg-green-600 hover:bg-green-700 text-white"
       },
       size: {
         default: "h-[4.2rem] px-[1.8rem] text-xl",
@@ -44,18 +46,7 @@ const btnVariants = cva(
   }
 )
 
-const Btn = ({
-  text,
-  variant = "default",
-  href,
-  classCustom,
-  size = "default",
-  children,
-  loading,
-  disabled,
-  buttonProps,
-  linkProps
-}: BtnOptional) => {
+const Btn = ({ text, variant = "default", href, classCustom, size = "default", children, loading, disabled, buttonProps, linkProps }: BtnOptional) => {
   const disabledClass = loading || disabled ? "opacity-75 cursor-not-allowed pointer-events-none" : ""
 
   if (href) {

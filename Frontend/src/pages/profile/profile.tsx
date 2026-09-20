@@ -11,18 +11,7 @@ import Btn from "@/components/ui/button"
 import { User, Mail, Phone, MapPin, Calendar, Building2, Camera, Save, Edit3, Clock, KeyIcon, CalendarCheck } from "lucide-react"
 import { profileSchema, type ProfileFormValidation } from "@/validators/profileValidation"
 import { getTodayDateString } from "@/utils/formatters"
-
-const GENDER_OPTIONS = [
-  { value: "MALE", label: "Nam" },
-  { value: "FEMALE", label: "Nữ" },
-  { value: "OTHER", label: "Khác" }
-]
-
-const roleNameMap: Record<string, string> = {
-  ADMIN: "Quản trị viên (Admin)",
-  MANAGER: "Trưởng phòng (Manager)",
-  EMPLOYEE: "Nhân viên (Employee)"
-}
+import { GENDER_OPTIONS, ROLE_NAME_MAP } from "@/types/profileType"
 
 const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -248,7 +237,7 @@ const Profile = () => {
 
               <div className="flex flex-col gap-y-1">
                 <span className="text-slate-400 text-xl font-medium">Vai trò hệ thống</span>
-                <span className="font-semibold text-slate-800">{user?.role ? roleNameMap[user.role] || user.role : ""}</span>
+                <span className="font-semibold text-slate-800">{user?.role ? ROLE_NAME_MAP[user.role] || user.role : ""}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">

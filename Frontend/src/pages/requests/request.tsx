@@ -62,7 +62,7 @@ const RequestsList = () => {
     isPending: isMyRequestPending,
     error: myRequestError
   } = useFetch<PaginatedRequestResponse>({
-    url: `/request/user/${user?.id}`,
+    url: `/request/user`,
     key: ["get_my_requests", myPage, searchDebounce, selectedType, selectedStatus],
     params: {
       page: myPage,

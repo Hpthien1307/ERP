@@ -2,6 +2,7 @@
 @import "shadcn/tailwind.css";
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
+@import "react-quill-new/dist/quill.snow.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -99,6 +100,10 @@
 
   * {
     @apply border-border outline-ring/50;
+  }
+
+  .ql-container.ql-snow {
+    border: none !important;
   }
 }
 

@@ -1,5 +1,4 @@
-export type GENDER_TYPE = "MALE" | "FEMALE" | "OTHER"
-export type ROLE_TYPE = "ADMIN" | "MANAGER" | "EMPLOYEE"
+import type { ROLE_TYPE } from "./globalType"
 
 export const GENDER_OPTIONS = [
   { value: "MALE", label: "Nam" },
@@ -8,34 +7,7 @@ export const GENDER_OPTIONS = [
 ]
 
 export const ROLE_NAME_MAP: Record<ROLE_TYPE, string> = {
-  ADMIN: "Quản trị viên (Admin)",
-  MANAGER: "Trưởng phòng (Manager)",
-  EMPLOYEE: "Nhân viên (Employee)"
-}
-
-type departmentInfo = {
-  id: string
-  title: string
-}
-
-type positionInfo = {
-  id: string
-  title: string
-}
-export type UserState = {
-  id: string
-  fullName: string
-  email: string
-  role: ROLE_TYPE
-  avatar?: string
-  position?: positionInfo
-  department?: departmentInfo
-  bio?: string
-  phone?: string
-  gender?: GENDER_TYPE
-  birthday?: string
-  address?: string
-  leaveBalance?: number
-  createdAt?: Date
-  updatedAt?: Date
+  ADMIN: "Quản trị viên",
+  MANAGER: "Trưởng phòng",
+  EMPLOYEE: "Nhân viên"
 }

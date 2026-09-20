@@ -9,6 +9,12 @@ export const FormatDate = (date: string | Date) => {
 export const FormatDateTime = (date: string | Date) => {
   return new Date(date).toLocaleTimeString("vi-VN")
 }
+export const formatSliceId = ({ id, length }: { id: string | number; length?: number }) => {
+  if (typeof id === "number") {
+    id = id.toString()
+  }
+  return id.slice(-length || -6).toUpperCase()
+}
 
 export const getTodayDateString = () => {
   const today = new Date()
