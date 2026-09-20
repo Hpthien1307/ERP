@@ -1,17 +1,15 @@
 import { AlertTriangle, CheckCircle2, Clock, Layers, ListTodo } from "lucide-react"
 
-type TaskStats = {
-  statsData: {
-    total: number
-    inProgress: number
-    todo: number
-    inReview: number
-    completed: number
-    overDue: number
-  }
+export type TaskStatsFields = {
+  total: number
+  todo: number
+  inProgress: number
+  inReview: number
+  completed: number
+  overDue: number
 }
 
-const TaskStats = ({ statsData }: TaskStats) => {
+const TaskStats = ({ statsData }: { statsData: TaskStatsFields }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
       <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-x-4">

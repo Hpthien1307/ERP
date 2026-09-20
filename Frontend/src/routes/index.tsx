@@ -3,6 +3,7 @@ import Attendance from "@/pages/attendance/attendance"
 import Profile from "@/pages/profile/profile"
 import Requests from "@/pages/requests/request"
 import Tasks from "@/pages/tasks/tasks"
+import Dashboard from "@/pages/dashboard/dashboard"
 
 type RouteConfig = {
   path: string
@@ -17,6 +18,10 @@ const publicRoutes: RouteConfig[] = [
 ]
 
 const privateRoutes: RouteConfig[] = [
+  {
+    path: "/dashboard",
+    component: Dashboard
+  },
   {
     path: "/attendance",
     component: Attendance

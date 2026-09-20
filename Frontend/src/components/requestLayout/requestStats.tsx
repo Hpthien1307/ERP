@@ -1,17 +1,19 @@
 import { CheckCircle2, Clock, FileText, XCircle } from "lucide-react"
 
+export type RequestStatsFields = {
+  total: number
+  pending: number
+  approved: number
+  rejected: number
+}
+
 type RequestStatsProps = {
   activeTab: string
   user: {
     role: string
     id: string
   }
-  stats: {
-    total: number
-    pending: number
-    approved: number
-    rejected: number
-  }
+  stats: RequestStatsFields
 }
 
 const RequestStats = ({ activeTab, user, stats }: RequestStatsProps) => {

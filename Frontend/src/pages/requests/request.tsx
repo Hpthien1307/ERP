@@ -23,6 +23,7 @@ import RequestStats from "@/components/requestLayout/requestStats"
 import RequestFilter from "@/components/requestLayout/requestFilter"
 import RequestList from "@/components/requestLayout/requestList"
 import { getTodayDateString } from "@/utils/formatters"
+import type { RequestStatsFields } from "@/components/requestLayout/requestStats"
 
 const RequestsList = () => {
   const PAGE_SIZE = 5
@@ -91,6 +92,11 @@ const RequestsList = () => {
     }
   })
 
+  const { data: requestStatsData } = useFetch<{ message: string; data: RequestStatsFields }>({
+    url: "/request/stats",
+    key: ["request_stats"]
+  })
+
   // Không còn filter thủ công nữa — data BE trả về đã đúng theo search/type/status
 
   const myRequests = myRequestData?.data ?? []
@@ -99,12 +105,7 @@ const RequestsList = () => {
   const reviewRequests = reviewRequestData?.data ?? []
   const reviewPageCount = reviewRequestData?.pagination?.totalPages ?? 1
 
-  const stats = {
-    total: myRequests.length,
-    pending: myRequests.filter(r => r.status === "PENDING").length,
-    approved: myRequests.filter(r => r.status === "APPROVED").length,
-    rejected: myRequests.filter(r => r.status === "REJECTED").length
-  }
+  const stats = requestStatsData?.data ?? { total: 0, pending: 0, approved: 0, rejected: 0 }
 
   // ==== Mutations ====
   const { mutate: reviewRequestMutate, isPending: isReviewing } = useUpdate({

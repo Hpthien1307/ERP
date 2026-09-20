@@ -3,7 +3,7 @@ import Input from "@/components/ui/input"
 import Select from "@/components/ui/select"
 import Textarea from "@/components/ui/textarea"
 import Modal from "@/components/modal/modal"
-import { AlertTriangle, FolderKanban, Trash2, X } from "lucide-react"
+import { AlertTriangle, FolderKanban, X } from "lucide-react"
 import { useAuth } from "@/store/useAuth"
 import { useEffect, useState } from "react"
 import { getTodayDateString } from "@/utils/formatters"
@@ -19,6 +19,7 @@ import TaskHeader from "@/components/task/taskHeader"
 import TaskFilter from "@/components/task/taskFilter"
 import TaskStats from "@/components/task/taskStats"
 import TaskList from "@/components/task/taskList"
+import type { TaskStatsFields } from "@/components/task/taskStats"
 import type { TaskItem, TaskListResponse } from "@/types/taskType"
 import { taskSchema, type TaskFormValidation } from "@/validators/taskValidation"
 import { useCreate } from "@/hooks/useCreate"
@@ -109,6 +110,11 @@ const Tasks = () => {
     }
   })
 
+  const { data: taskStatsData } = useFetch<{ message: string; data: TaskStatsFields }>({
+    url: "/task/stats",
+    key: ["task_stats"]
+  })
+
   useEffect(() => {
     if (editingTask) {
       reset({
@@ -134,14 +140,7 @@ const Tasks = () => {
   }, [editingTask, createModal, reset, today])
 
   const pageCount = dataTasks?.pagination?.totalPages ?? 1
-  const stats = {
-    total: dataTasks?.pagination?.total ?? dataTasks?.data?.length ?? 0,
-    inProgress: dataTasks?.data?.filter(task => task.status === "IN_PROGRESS").length ?? 0,
-    todo: dataTasks?.data?.filter(task => task.status === "TODO").length ?? 0,
-    completed: dataTasks?.data?.filter(task => task.status === "COMPLETED").length ?? 0,
-    inReview: dataTasks?.data?.filter(task => task.status === "IN_REVIEW").length ?? 0,
-    overDue: dataTasks?.data?.filter(task => task.dueDate < today).length ?? 0
-  }
+  const stats = taskStatsData?.data ?? { total: 0, todo: 0, inProgress: 0, inReview: 0, completed: 0, overDue: 0 }
 
   const { mutate: updateStatus } = useUpdate({
     url: "/task",
