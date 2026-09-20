@@ -224,7 +224,7 @@ const Tasks = () => {
       <TaskHeader user={user} setCreateModal={() => setCreateModal(!createModal)} />
 
       {/* 2. STATS CARDS TỔNG QUAN */}
-      <TaskStats statsData={stats} />
+      {isMyTask ? <TaskStats statsData={stats} /> : ""}
 
       {/* 3. BỘ LỌC & TÌM KIẾM (SỬ DỤNG INPUT & SELECT) */}
       <TaskFilter

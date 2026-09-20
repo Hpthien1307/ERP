@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react"
 import { Bell } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
-
 import useFetch from "@/hooks/useFetch"
 import { axiosClient } from "@/api/axiosClient"
 import { socket } from "@/lib/socket"
@@ -104,7 +103,7 @@ const NotificationDropdown = () => {
       // ============================
 
       if (notification.taskId) {
-        navigate(`/task/${notification.taskId}`)
+        navigate("/my-tasks")
         return
       }
 
