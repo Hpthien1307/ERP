@@ -10,7 +10,7 @@ const BaseTasks = z.object({
   title: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(1, "Tiêu đề công việc là bắt buộc").trim().optional(),
   description: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(1, "Mô tả công việc là bắt buộc").trim().optional(),
   status: z.nativeEnum(task_status).default(task_status.TODO),
-  priority: z.nativeEnum(priority_level).default(priority_level.LOW),
+  priority: z.nativeEnum(priority_level).default(priority_level.NORMAL),
   assigneeId: z.string().uuid("assigneeId phải là UUID hợp lệ").optional(),
   creatorId: z.string().uuid("creatorId phải là UUID hợp lệ").optional(),
   departmentId: z.string().uuid().optional().nullable(),

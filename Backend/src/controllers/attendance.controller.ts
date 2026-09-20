@@ -85,7 +85,10 @@ export class AttendanceController {
       const existingAttendance = await prisma.attendance.findFirst({
         where: {
           userId,
-          date: { gte: startOfDay, lte: endOfDay }
+          date: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
         }
       })
 
@@ -95,19 +98,28 @@ export class AttendanceController {
         })
       }
 
+      if (!existingAttendance.checkIn) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: "Bạn chưa thực hiện check-in hôm nay"
+        })
+      }
+
       const checkOutTime = new Date()
 
-      // 1. Tính tổng số giờ làm việc
+      // Tính tổng số giờ làm việc
       const diffMs = checkOutTime.getTime() - existingAttendance.checkIn.getTime()
-      const rawHours = diffMs / (1000 * 60 * 60)
-      const workingHours = Math.round(rawHours * 100) / 100 // Làm tròn 2 số thập phân
 
-      // 2. Lưu cả checkOut và workingHours vào DB
+      const rawHours = diffMs / (1000 * 60 * 60)
+
+      const workingHours = Math.round(rawHours * 100) / 100
+
       const updatedAttendance = await prisma.attendance.update({
-        where: { id: existingAttendance.id },
+        where: {
+          id: existingAttendance.id
+        },
         data: {
           checkOut: checkOutTime,
-          workingHours: workingHours
+          workingHours
         }
       })
 
