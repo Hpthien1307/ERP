@@ -17,7 +17,7 @@ let failedQueue: Array<{
   reject: (reason?: unknown) => void
 }> = []
 
-const processQueue = (error: null) => {
+const processQueue = (error: unknown) => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error)

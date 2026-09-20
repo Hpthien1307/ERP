@@ -29,7 +29,7 @@ const AttendanceChart = ({ data }: AttendanceChartProps) => {
                     <Cell key={entry.name} fill={entry.color} stroke="none" />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 14 }} formatter={(value: number) => [`${value} ngày`, ""]} />
+                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 14 }} formatter={value => [`${value} ngày`, ""]} />
               </PieChart>
             </ResponsiveContainer>
           </div>

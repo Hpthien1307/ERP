@@ -56,7 +56,12 @@ const AttendanceStatus = () => {
             <div className="flex flex-col items-start lg:items-end">
               <span className="text-blue-100 text-3xl">Giờ ra</span>
               <span className="text-white text-5xl font-bold">
-                {hasCheckedOut ? new Date(todayAttendance!.checkOut).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : "--:--"}
+                {hasCheckedOut && todayAttendance?.checkOut
+                  ? new Date(todayAttendance.checkOut).toLocaleTimeString("vi-VN", {
+                      hour: "2-digit",
+                      minute: "2-digit"
+                    })
+                  : "--:--"}{" "}
               </span>
             </div>
           </div>

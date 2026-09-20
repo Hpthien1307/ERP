@@ -28,7 +28,7 @@ const RequestChart = ({ data }: RequestChartProps) => {
                     <Cell key={entry.name} fill={entry.color} stroke="none" />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 14 }} formatter={(value: number) => [`${value} đơn`, ""]} />
+                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", fontSize: 14 }} formatter={value => [`${value} đơn`, ""]} />
               </PieChart>
             </ResponsiveContainer>
           </div>

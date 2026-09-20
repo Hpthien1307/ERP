@@ -51,7 +51,7 @@ const Tasks = () => {
 
   const myMemberAll = [
     { value: "", label: "Chọn người phụ trách" },
-    ...(user?.department?.users.map(member => ({
+    ...(user?.department?.users?.map(member => ({
       value: member.id,
       label: member.fullName
     })) ?? [])
@@ -60,8 +60,8 @@ const Tasks = () => {
   const myMemberTask = [
     { value: "ALL", label: "Tất cả người phụ trách" },
     ...(user?.department?.users
-      .filter(member => member.role !== "MANAGER")
-      .map(member => ({
+      ?.filter(member => member.role !== "MANAGER")
+      ?.map(member => ({
         value: member.id,
         label: member.fullName
       })) ?? [])

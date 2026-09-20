@@ -12,7 +12,7 @@ type RequestStatsProps = {
   user: {
     role: string
     id: string
-  }
+  } | null
   stats: RequestStatsFields
 }
 
@@ -20,7 +20,7 @@ const RequestStats = ({ activeTab, user, stats }: RequestStatsProps) => {
   return (
     <>
       {/* 2. STATS CARDS TỔNG QUAN */}
-      {activeTab === "mine" || user.role === "EMPLOYEE" ? (
+      {activeTab === "mine" || user?.role === "EMPLOYEE" ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
           <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-x-4">
             <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
