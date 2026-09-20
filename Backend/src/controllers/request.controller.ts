@@ -6,6 +6,7 @@ import { RequestValidation } from "../validations/request.validation.js"
 import type { AuthRequest } from "../middlewares/auth.middleware.js"
 import { createNotification, NotificationType } from "../services/notification.service.js"
 import { getPaginationParams, buildPaginationResponse } from "../utils/pagination.util.js"
+import { getRequestStatsData } from "../services/request.service.js"
 
 export class RequestController {
   public getRequest = async (req: Request, res: Response, next: NextFunction) => {
@@ -80,6 +81,14 @@ export class RequestController {
     }
   }
 
+  public getRequestStats = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const data = await getRequestStatsData(req.userId!)
+      return res.status(StatusCodes.OK).json({ message: STATUS_MESSAGE.STATUS_OK, data })
+    } catch (error) {
+      next(error)
+    }
+  }
   public getManagedRequests = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const currentUserId = req.userId!

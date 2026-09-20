@@ -19,6 +19,7 @@ import attendanceRouter from "./routes/attendance.routes.js"
 import requestRouter from "./routes/request.routes.js"
 import taskRouter from "./routes/task.routes.js"
 import notificationRouter from "./routes/notification.routes.js"
+import dashboardRouter from "./routes/dashboard.routes.js"
 
 // Load environment variables
 dotenv.config()
@@ -122,6 +123,7 @@ app.use("/api", attendanceRouter)
 app.use("/api", requestRouter)
 app.use("/api", taskRouter)
 app.use("/api", notificationRouter)
+app.use("/api", dashboardRouter)
 
 // Basic Health Check Route
 app.get("/health", (req: Request, res: Response) => {

@@ -8,6 +8,7 @@ router.use(verifyToken)
 
 router.get("/request", requireRole("ADMIN"), requestController.getRequest)
 router.get("/request/manager", requireRole("MANAGER", "ADMIN"), requestController.getManagedRequests)
+router.get("/request/stats", requestController.getRequestStats)
 router.get("/request/user", requestController.getUserRequest)
 router.get("/request/:id", requireRole("MANAGER", "ADMIN"), requestController.getDetailRequest)
 router.post("/request", requestController.createRequest)

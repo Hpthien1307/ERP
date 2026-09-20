@@ -6,6 +6,7 @@ import { STATUS_MESSAGE } from "../constant/systemMessage.js"
 import { io } from "../server.js"
 import type { AuthRequest } from "../middlewares/auth.middleware.js"
 import { createNotification, NotificationType } from "../services/notification.service.js"
+import { getTaskStatsData } from "../services/task.service.js"
 
 export class TaskController {
   public getTask = async (req: Request, res: Response, next: NextFunction) => {
@@ -167,6 +168,15 @@ export class TaskController {
           totalPages: Math.ceil(total / limit)
         }
       })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  public getTaskStats = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const data = await getTaskStatsData(req.userId!)
+      return res.status(StatusCodes.OK).json({ message: STATUS_MESSAGE.STATUS_OK, data })
     } catch (error) {
       next(error)
     }

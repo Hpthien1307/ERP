@@ -5,6 +5,7 @@ import { AttendanceValidation } from "../validations/attendance.validation.js"
 import { STATUS_MESSAGE } from "../constant/systemMessage.js"
 import type { AuthRequest } from "../middlewares/auth.middleware.js"
 import { calculateAttendanceCounts, calculateAbsentDays } from "../utils/attendanceStats.util.js"
+import { getAttendanceStatsData } from "../services/attendance.service.js"
 
 // Hàm tiện ích: Lấy mốc bắt đầu (00:00:00) và kết thúc (23:59:59.999) của ngày hiện tại
 const getDayRange = (dateInput = new Date()) => {
@@ -219,31 +220,8 @@ export class AttendanceController {
   // XEM THỐNG KÊ CHẤM CÔNG CÁ NHÂN
   public getMyAttendanceStats = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const userId = req.userId!
-      const now = new Date()
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
-
-      const [attendances, approvedLeaves] = await Promise.all([
-        prisma.attendance.findMany({ where: { userId, date: { gte: startOfMonth, lte: endOfMonth } } }),
-        prisma.request.findMany({
-          where: {
-            userId,
-            type: "LEAVE",
-            status: "APPROVED",
-            startDate: { lte: endOfMonth },
-            endDate: { gte: startOfMonth }
-          }
-        })
-      ])
-
-      const { onTime, late, avgWorkingHours } = calculateAttendanceCounts(attendances)
-      const absent = calculateAbsentDays(startOfMonth, endOfMonth, attendances, approvedLeaves)
-
-      return res.status(StatusCodes.OK).json({
-        message: STATUS_MESSAGE.STATUS_OK,
-        data: { onTime, late, absent, avgWorkingHours }
-      })
+      const data = await getAttendanceStatsData(req.userId!)
+      return res.status(StatusCodes.OK).json({ message: STATUS_MESSAGE.STATUS_OK, data })
     } catch (error) {
       next(error)
     }

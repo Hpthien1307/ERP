@@ -8,6 +8,7 @@ router.use(verifyToken)
 
 router.get("/task", taskController.getTask)
 router.get("/task/me", taskController.getMyTask)
+router.get("/task/stats", taskController.getTaskStats)
 router.get("/task/:id", taskController.getDetailTask)
 router.post("/task", requireRole("MANAGER", "ADMIN", "EMPLOYEE"), taskController.createTask)
 router.patch("/task/:id", taskController.updateTask)
