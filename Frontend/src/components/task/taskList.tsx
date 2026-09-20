@@ -3,7 +3,6 @@ import { Calendar, Eye, FileText, Trash2 } from "lucide-react"
 import { Spinner } from "../ui/spinner"
 import Pagination from "../pagination/pagination"
 import { FormatDate, formatSliceId } from "@/utils/formatters"
-import { TASK_TYPE_OPTIONS } from "@/types/taskType"
 
 type TaskListProps = {
   isManager: boolean
