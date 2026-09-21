@@ -56,13 +56,13 @@ const Dashboard = () => {
       )}
 
       {isPending && (
-        <div className="bg-white p-16 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-center">
+        <div className="bg-white p-16 min-h-96 rounded-3xl border border-slate-200/80 shadow-xs flex items-center justify-center">
           <Spinner className="size-16" />
         </div>
       )}
 
       {!isPending && error && (
-        <div className="bg-white p-16 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col items-center justify-center text-center gap-y-3">
+        <div className="bg-white p-16 min-h-96 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col items-center justify-center text-center gap-y-3">
           <XCircle size={40} className="text-rose-300" />
           <p className="text-slate-500 text-2xl">Không thể tải dữ liệu bảng điều khiển. Vui lòng thử lại sau.</p>
         </div>

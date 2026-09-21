@@ -72,15 +72,14 @@ const FormLogin = () => {
       </div>
 
       <Btn
-        text="Đăng nhập"
+        text={isSubmitting ? "Đang xử lý" : "Đăng nhập"}
         variant="primary"
         size="large"
         classCustom="w-full mt-2 rounded-2xl justify-center"
         buttonProps={{ type: "submit" }}
         disabled={isSubmitting}
       >
-        {isSubmitting && <Spinner className="w-6 h-6" />}
-        {!isSubmitting && <LogIn size={20} />}
+        {isSubmitting ? <Spinner className="w-10 h-10 text-white -order-1" /> : <LogIn size={20} />}
       </Btn>
     </form>
   )

@@ -31,9 +31,9 @@ const MyRequestTable = ({ isPending, error, items, renderTypeBadge, renderStatus
           </thead>
           <tbody className="relative divide-y min-h-80 divide-slate-100 text-2xl text-slate-700">
             {isPending && (
-              <tr className="absolute top-1/2 left-1/2 -translate-1/2">
-                <td colSpan={6} className="py-16 text-center">
-                  <Spinner className="size-16" />
+              <tr>
+                <td colSpan={6} className="py-20">
+                  <Spinner className="size-16 mx-auto" />
                 </td>
               </tr>
             )}
