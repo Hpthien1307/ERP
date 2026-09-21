@@ -11,7 +11,7 @@ export class UserController {
       const getUsers = await prisma.user.findMany({
         orderBy: { createdAt: "desc" },
         omit: {
-          password: true,
+          // password: true,
           positionId: true,
           departmentId: true
         },

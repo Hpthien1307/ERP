@@ -17,7 +17,7 @@ export const getCookieOptions = () => {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: "strict" as const
+    sameSite: isProduction ? ("none" as const) : ("lax" as const)
   }
 }
 
