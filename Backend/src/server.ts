@@ -143,13 +143,20 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   })
 })
 
-// 💡 CHỈ LẮNG NGHE PORT KHI CHẠY Ở MÔ TRƯỜNG LOCAL
+// 💡 CHỈ LẮNG NGHE PORT KHI CHẠY Ở MÔI TRƯỜNG LOCAL
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 8080
   httpServer.listen(PORT, () => {
-    console.log(`Đã khởi động server tại cổng http://localhost:${PORT}`)
-    console.log(`Health check available at: http://localhost:${PORT}/health`)
+    console.log(`Đã khởi động server tại cổng http:localhost:${PORT}`)
+    console.log(`Health check available at: http:localhost:${PORT}/health`)
   })
 }
 
-export default app
+// export default app
+
+// const PORT = process.env.PORT || 8080
+
+// httpServer.listen(PORT, () => {
+//   console.log(`🚀 Server running on port ${PORT}`)
+//   console.log(`❤️ Health check: /health`)
+// })
