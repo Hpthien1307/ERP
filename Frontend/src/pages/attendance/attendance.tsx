@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { AttendanceListResponse } from "@/types/attendanceType"
 import { getTodayDateString } from "@/utils/formatters"
 
@@ -39,6 +39,10 @@ const Attendance = () => {
   const historyAttendance = historyData?.data ?? []
   const historyAttendanceTotalPages = historyData?.pagination?.totalPages ?? 0
 
+  const handleFilterStatus = useCallback((value: string) => {
+    setFilterStatus(value as AttendanceFilterType)
+  }, [])
+
   return (
     <div className="max-w-full mx-auto flex flex-col gap-y-8 pb-16">
       {/* 1. HEADER TRANG */}
@@ -55,9 +59,7 @@ const Attendance = () => {
         today={getTodayDateString()}
         filterStatus={filterStatus}
         filterDate={filterDate}
-        setFilterStatus={(value: string) => {
-          setFilterStatus(value as AttendanceFilterType)
-        }}
+        setFilterStatus={handleFilterStatus}
         setFilterDate={setFilterDate}
       />
 

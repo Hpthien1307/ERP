@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import Btn from "@/components/ui/button"
 import Input from "@/components/ui/input"
 import Select from "@/components/ui/select"
@@ -459,4 +459,4 @@ const RequestsList = () => {
   )
 }
 
-export default RequestsList
+export default React.memo(RequestsList)

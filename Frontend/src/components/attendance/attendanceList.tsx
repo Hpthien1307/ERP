@@ -3,6 +3,7 @@ import { Calendar, FileText, XCircle } from "lucide-react"
 import { Spinner } from "../ui/spinner"
 import { FormatDate, FormatDateTime } from "@/utils/formatters"
 import Pagination from "../pagination/pagination"
+import React from "react"
 
 type AttendanceListProps = {
   data: AttendanceItem[]
@@ -101,4 +102,4 @@ const AttendanceList = ({ data, isLoading, isError, page, pageCount, onPageChang
   )
 }
 
-export default AttendanceList
+export default React.memo(AttendanceList)

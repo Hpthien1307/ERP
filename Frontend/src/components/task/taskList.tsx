@@ -3,6 +3,7 @@ import { Eye, FileText, Trash2 } from "lucide-react"
 import { Spinner } from "../ui/spinner"
 import Pagination from "../pagination/pagination"
 import { FormatDate, formatSliceId } from "@/utils/formatters"
+import React from "react"
 
 type TaskListProps = {
   isManager: boolean
@@ -179,4 +180,4 @@ const TaskList = ({ isManager, data = [], loading, error, pageCount, page, onPag
   )
 }
 
-export default TaskList
+export default React.memo(TaskList)
