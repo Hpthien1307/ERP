@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Btn from "@/components/ui/button"
 import Input from "@/components/ui/input"
 import Select from "@/components/ui/select"
@@ -15,7 +15,8 @@ import { createRequestSchema } from "@/validators/requestValidation"
 import { showToast } from "@/components/ui/toast"
 import { useCreate } from "@/hooks/useCreate"
 import { useUpdate } from "@/hooks/useUdate"
-
+import { useQueryClient } from "@tanstack/react-query"
+import { socket } from "@/lib/socket"
 // component
 import Modal from "@/components/modal/modal"
 import RequestHeader from "@/components/requestLayout/requestHeader"
@@ -41,6 +42,23 @@ const RequestsList = () => {
   const [selectedDetail, setSelectedDetail] = useState<RequestItem | null>(null)
   const [rejectTarget, setRejectTarget] = useState<RequestItem | null>(null)
   const [rejectReasonInput, setRejectReasonInput] = useState("")
+
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    // Khi nhận được tín hiệu từ server -> Xóa ngay cache của cả 2 mảng đơn
+    const handleRequestUpdate = () => {
+      queryClient.invalidateQueries({ queryKey: ["get_my_requests"] })
+      queryClient.invalidateQueries({ queryKey: ["get_review_requests"] })
+      queryClient.invalidateQueries({ queryKey: ["request_stats"] })
+    }
+
+    socket.on("REQUEST_UPDATED", handleRequestUpdate)
+
+    return () => {
+      socket.off("REQUEST_UPDATED", handleRequestUpdate)
+    }
+  }, [queryClient])
 
   // ==== Form tạo đơn ====
   const [form, setForm] = useState<RequestFormState>({
@@ -109,14 +127,13 @@ const RequestsList = () => {
   // ==== Mutations ====
   const { mutate: reviewRequestMutate, isPending: isReviewing } = useUpdate({
     url: "request",
-    // khớp đúng key thật của 2 useFetch phía trên: duyệt/từ chối phải cập nhật cả 2 danh sách
-    invalidateKey: ["get_my_requests", "get_review_requests"],
+    invalidateKey: ["get_review_requests"],
     successMessage: "Xử lý đơn thành công!"
   })
 
   const { mutate: createRequest, isPending: isSubmitting } = useCreate({
     url: "/request",
-    invalidateKey: ["get_my_requests"], // khớp đúng key thật "get_my_requests"
+    invalidateKey: ["get_my_requests"],
     successMessage: "Gửi yêu cầu thành công!"
   })
 

@@ -110,13 +110,15 @@ const RequestsList = () => {
   // ==== Mutations ====
   const { mutate: reviewRequestMutate, isPending: isReviewing } = useUpdate({
     url: "request",
-    invalidateKey: ["get_review_requests", "get_my_requests"],
+    // invalidateKey: ["get_review_requests", "get_my_requests"],
+    invalidateKey: [["get_review_requests"], ["get_my_requests"], ["request_stats"]],
     successMessage: "Xử lý đơn thành công!"
   })
 
   const { mutate: createRequest, isPending: isSubmitting } = useCreate({
     url: "/request",
-    invalidateKey: ["get_my_requests", "get_review_requests"],
+    // invalidateKey: ["get_my_requests", "get_review_requests"],
+    invalidateKey: [["get_my_requests"], ["get_review_requests"], ["request_stats"]],
     successMessage: "Gửi yêu cầu thành công!"
   })
 

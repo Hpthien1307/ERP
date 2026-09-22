@@ -7,6 +7,7 @@ import type { AuthRequest } from "../middlewares/auth.middleware.js"
 import { createNotification, NotificationType } from "../services/notification.service.js"
 import { getPaginationParams, buildPaginationResponse } from "../utils/pagination.util.js"
 import { getRequestStatsData } from "../services/request.service.js"
+import { io } from "../server.js"
 
 export class RequestController {
   public getRequest = async (req: Request, res: Response, next: NextFunction) => {
@@ -274,6 +275,8 @@ export class RequestController {
         })
       }
 
+      io.emit("REQUEST_UPDATED")
+
       return res.status(StatusCodes.CREATED).json({
         message: STATUS_MESSAGE.STATUS_CREATE,
         data: newRequest
@@ -370,6 +373,8 @@ export class RequestController {
 
         return request
       })
+
+      io.emit("REQUEST_UPDATED")
 
       await createNotification({
         userId: existingRequest.userId,

@@ -6,7 +6,7 @@ const router = Router()
 const requestController = new RequestController()
 router.use(verifyToken)
 
-router.get("/request", requireRole("ADMIN"), requestController.getRequest)
+router.get("/request", requireRole("ADMIN", "MANAGER"), requestController.getRequest)
 router.get("/request/manager", requireRole("MANAGER", "ADMIN"), requestController.getManagedRequests)
 router.get("/request/stats", requestController.getRequestStats)
 router.get("/request/user", requestController.getUserRequest)
