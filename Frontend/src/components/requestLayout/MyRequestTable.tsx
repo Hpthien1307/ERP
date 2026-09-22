@@ -2,6 +2,7 @@ import { Eye, FileText, XCircle } from "lucide-react"
 import { Spinner } from "../ui/spinner"
 import { TABLE_COLUMNS, type RequestItem, type RequestStatus, type RequestType } from "@/types/requestType"
 import Pagination from "../pagination/pagination"
+import { formatSliceId } from "@/utils/formatters"
 
 type MyRequestTableProps = {
   isPending: boolean
@@ -61,7 +62,7 @@ const MyRequestTable = ({ isPending, error, items, renderTypeBadge, renderStatus
                 <td className="py-5 px-6 font-medium">
                   <div className="flex flex-col gap-y-1.5 items-start">
                     {renderTypeBadge(item.type)}
-                    <span className="text-slate-400 text-xl">#{item.id}</span>
+                    <span className="text-slate-400 text-xl">#{formatSliceId({ id: item.id })}</span>
                   </div>
                 </td>
 

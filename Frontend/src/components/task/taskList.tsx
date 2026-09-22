@@ -1,5 +1,5 @@
 import { TABLE_COLUMNS_TASK, type TaskItem } from "@/types/taskType"
-import { Calendar, Eye, FileText, Trash2 } from "lucide-react"
+import { Eye, FileText, Trash2 } from "lucide-react"
 import { Spinner } from "../ui/spinner"
 import Pagination from "../pagination/pagination"
 import { FormatDate, formatSliceId } from "@/utils/formatters"
@@ -64,42 +64,6 @@ const TaskList = ({ isManager, data = [], loading, error, pageCount, page, onPag
           </span>
         )
     }
-
-    // const statusClass = (() => {
-    //   switch (task?.status) {
-    //     case "TODO":
-    //       return "bg-blue-50 text-blue-600 border-blue-200"
-    //     case "IN_PROGRESS":
-    //       return "bg-sky-50 text-sky-700 border-sky-200"
-    //     case "IN_REVIEW":
-    //       return "bg-indigo-50 text-indigo-700 border-indigo-200"
-    //     case "COMPLETED":
-    //       return "bg-emerald-50 text-emerald-700 border-emerald-200"
-    //     default:
-    //       return "bg-slate-50 text-slate-600 border-slate-200"
-    //   }
-    // })()
-
-    // return (
-    //   <select
-    //     value={task?.status}
-    //     onChange={e => onUpdateStatus?.(task.id, e.target.value)}
-    //     className={`inline-flex items-center px-3.5 py-1.5 rounded-full text-center text-xl font-semibold border cursor-pointer outline-none transition-colors ${statusClass}`}
-    //   >
-    //     <option value="TODO" className="bg-white text-slate-800">
-    //       Cần làm
-    //     </option>
-    //     <option value="IN_PROGRESS" className="bg-white text-slate-800">
-    //       Đang thực hiện
-    //     </option>
-    //     <option value="IN_REVIEW" className="bg-white text-slate-800">
-    //       Đang duyệt
-    //     </option>
-    //     <option value="COMPLETED" className="bg-white text-slate-800">
-    //       Đã hoàn thành
-    //     </option>
-    //   </select>
-    // )
   }
 
   return (
@@ -147,7 +111,7 @@ const TaskList = ({ isManager, data = [], loading, error, pageCount, page, onPag
                     className="font-mono text-lg font-bold px-2.5 py-0.5 rounded-lg bg-slate-100
                    text-slate-700 border border-slate-200"
                   >
-                    {formatSliceId({ id: task.id })}
+                    #{formatSliceId({ id: task.id })}
                   </span>
                 </td>
 
@@ -171,7 +135,6 @@ const TaskList = ({ isManager, data = [], loading, error, pageCount, page, onPag
                 {/* Hạn chót */}
                 <td className="py-5 px-6 whitespace-nowrap">
                   <div className="flex items-center gap-x-2 text-slate-800 text-2xl font-medium">
-                    <Calendar size={20} className="text-slate-400" />
                     <span>{FormatDate(task?.dueDate)}</span>
                   </div>
                 </td>

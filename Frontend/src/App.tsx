@@ -6,7 +6,7 @@ import { useEffect } from "react"
 import { useAuth } from "./store/useAuth"
 import { socket } from "./lib/socket"
 const App = () => {
-  const { checkAuth, isAuthenticated } = useAuth()
+  const { checkAuth, isAuthenticated, isLoading } = useAuth()
 
   useEffect(() => {
     checkAuth()
@@ -23,6 +23,14 @@ const App = () => {
       socket.disconnect()
     }
   }, [isAuthenticated])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-gray-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      </div>
+    )
+  }
 
   return (
     <Router>

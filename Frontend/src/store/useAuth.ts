@@ -26,15 +26,14 @@ export const useAuth = create<AuthState>(set => ({
       await authService.signIn({ email, password })
       const userData = await authService.checkAuth()
 
-      showToast.success("Đăng nhập thành công")
-
       set({
         user: userData,
         isAuthenticated: true
       })
+      showToast.success("Đăng nhập thành công")
     } catch (error) {
       console.error(error)
-      showToast.error("Đăng nhập thất bại")
+      showToast.error("Tài khoản hoặc mật khẩu không đúng")
       set({ isAuthenticated: false })
     } finally {
       set({ isLoading: false })

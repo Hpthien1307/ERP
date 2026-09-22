@@ -13,7 +13,7 @@ export const formatSliceId = ({ id, length }: { id: string | number; length?: nu
   if (typeof id === "number") {
     id = id.toString()
   }
-  return id.slice(-(length ?? -6)).toUpperCase()
+  return id.slice(-(length ? length : 6)).toUpperCase()
 }
 
 export const getTodayDateString = () => {

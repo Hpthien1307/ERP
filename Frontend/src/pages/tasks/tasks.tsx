@@ -43,7 +43,10 @@ const Tasks = () => {
 
   const isManager = user?.role === "MANAGER"
   const isEditing = !!editingTask
+  const isAssignedToMe = user?.id === editingTask?.assignee?.id
   const isReadOnlyFields = isEditing && !isManager
+  const isStatusReadOnly = isEditing && !isManager && !isAssignedToMe
+
   const isModalOpen = createModal || isEditing
 
   const formStatusOptions = TASK_TYPE_OPTIONS.filter(opt => opt.value !== "ALL")
@@ -60,7 +63,7 @@ const Tasks = () => {
   const myMemberTask = [
     { value: "ALL", label: "Tất cả người phụ trách" },
     ...(user?.department?.users
-      ?.filter(member => member.role !== "MANAGER")
+      ?.filter(member => member.id !== user?.id)
       ?.map(member => ({
         value: member.id,
         label: member.fullName
@@ -296,7 +299,14 @@ const Tasks = () => {
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select label="Trạng thái" error={errors.status?.message} required options={formStatusOptions} {...register("status")} />
+              <Select
+                label="Trạng thái"
+                error={errors.status?.message}
+                required
+                disabled={isStatusReadOnly}
+                options={formStatusOptions}
+                {...register("status")}
+              />
               <Select
                 label="Người phụ trách (Assignee) *"
                 error={errors.assigneeId?.message}
