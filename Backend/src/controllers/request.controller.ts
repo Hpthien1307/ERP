@@ -50,37 +50,6 @@ export class RequestController {
     }
   }
 
-  public getDetailRequest = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const idValidation = RequestValidation.getRequestId.safeParse(req.params || req.body)
-      if (!idValidation.success) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
-          errors: idValidation.error.flatten().fieldErrors
-        })
-      }
-
-      const getRequestData = await prisma.request.findUnique({
-        where: {
-          id: idValidation.data.id
-        }
-      })
-
-      if (!getRequestData) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-          message: "Không tìm thấy đơn yêu cầu"
-        })
-      }
-
-      return res.status(StatusCodes.OK).json({
-        message: STATUS_MESSAGE.STATUS_OK,
-        data: getRequestData
-      })
-    } catch (error) {
-      next(error)
-    }
-  }
-
   public getRequestStats = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = await getRequestStatsData(req.userId!)

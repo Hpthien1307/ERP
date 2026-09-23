@@ -3,6 +3,7 @@ import { Spinner } from "../ui/spinner"
 import { TABLE_COLUMNS, type RequestItem, type RequestStatus, type RequestType } from "@/types/requestType"
 import Pagination from "../pagination/pagination"
 import { formatSliceId } from "@/utils/formatters"
+import { getErrorMessage } from "@/utils/error"
 
 type MyRequestTableProps = {
   isPending: boolean
@@ -43,12 +44,12 @@ const MyRequestTable = ({ isPending, error, items, renderTypeBadge, renderStatus
               <tr>
                 <td colSpan={6} className="py-16 text-center text-rose-400 text-2xl font-medium">
                   <XCircle size={40} className="mx-auto text-rose-300 mb-3" />
-                  {error.message || "Không thể tải dữ liệu. Vui lòng thử lại sau."}
+                  {getErrorMessage(error)}
                 </td>
               </tr>
             )}
 
-            {items && items.length === 0 && (
+            {!isPending && !error && items.length === 0 && (
               <tr>
                 <td colSpan={6} className="py-16 text-center text-slate-400 text-2xl font-medium">
                   <FileText size={40} className="mx-auto text-slate-300 mb-3" />

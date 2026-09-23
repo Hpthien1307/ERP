@@ -3,7 +3,7 @@ import type { SignInType } from "@/types/signInType"
 
 export const authService = {
   signIn: async (data: SignInType) => {
-    const response = await axiosClient.post("/auth/signin", data) // bỏ luôn full URL + withCredentials (axiosClient đã có sẵn baseURL + withCredentials)
+    const response = await axiosClient.post("/auth/signin", data)
     return response.data.data
   },
   checkAuth: async () => {

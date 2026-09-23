@@ -2,6 +2,7 @@ import { CheckCircle, FileText, XCircle } from "lucide-react"
 import { Spinner } from "../ui/spinner"
 import type { RequestItem, RequestType } from "@/types/requestType"
 import Pagination from "../pagination/pagination"
+import { getErrorMessage } from "@/utils/error"
 
 type ReviewRequestTableProps = {
   isPending: boolean
@@ -53,12 +54,12 @@ const ReviewRequestTable = ({
             {!isPending && error && (
               <tr>
                 <td colSpan={5} className="py-16 text-center text-rose-400 text-2xl font-medium">
-                  {error.message || "Không thể tải dữ liệu."}
+                  {getErrorMessage(error)}
                 </td>
               </tr>
             )}
 
-            {!isPending && items.length === 0 && (
+            {!isPending && !error && items.length === 0 && (
               <tr>
                 <td colSpan={6} className="py-16 text-center text-slate-400 text-2xl font-medium">
                   <FileText size={40} className="mx-auto text-slate-300 mb-3" />
