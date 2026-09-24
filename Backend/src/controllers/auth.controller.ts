@@ -7,6 +7,7 @@ import { prisma } from "../config/db.js"
 import { AuthValidation } from "../validations/auth.validation.js"
 import { STATUS_MESSAGE } from "../constant/systemMessage.js"
 import type { AuthRequest } from "../middlewares/auth.middleware.js"
+import { hashToken } from "../utils/hashToken.utils.js"
 
 const ACCESS_TOKEN_JWT_EXP = "15m"
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60 * 1000 // 15 phút
@@ -48,12 +49,13 @@ export class AuthController {
       expiresIn: ACCESS_TOKEN_JWT_EXP
     })
     const refreshToken = crypto.randomBytes(64).toString("hex")
+    const refreshTokenHash = hashToken(refreshToken)
     const expiresAt = new Date(Date.now() + REFESH_TOKEN_TTL)
 
     await prisma.session.create({
       data: {
         userId: user.id,
-        refreshToken,
+        refreshToken: refreshTokenHash,
         expiresAt
       }
     })
@@ -90,9 +92,23 @@ export class AuthController {
         })
       }
 
-      await prisma.session.deleteMany({
+      const getRefreshTokenHash = hashToken(getRefreshToken)
+
+      const existingSession = await prisma.session.findUnique({
         where: {
-          refreshToken: getRefreshToken
+          refreshToken: getRefreshTokenHash
+        }
+      })
+
+      if (!existingSession) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+          message: "Không tìm thấy refreshToken"
+        })
+      }
+
+      await prisma.session.delete({
+        where: {
+          id: existingSession.id
         }
       })
 
@@ -170,10 +186,11 @@ export class AuthController {
           message: "Yêu cầu đăng nhập"
         })
       }
+      const oldRefreshTokenHash = hashToken(oldRefreshToken)
 
       const existingSession = await prisma.session.findUnique({
         where: {
-          refreshToken: oldRefreshToken
+          refreshToken: oldRefreshTokenHash
         },
         include: {
           user: true
@@ -211,12 +228,13 @@ export class AuthController {
         expiresIn: ACCESS_TOKEN_JWT_EXP
       })
       const newRefreshToken = crypto.randomBytes(64).toString("hex")
+      const newRefreshTokenHash = hashToken(newRefreshToken)
       const newExpiresAt = new Date(Date.now() + REFESH_TOKEN_TTL)
 
       await prisma.session.create({
         data: {
           userId: user.id,
-          refreshToken: newRefreshToken,
+          refreshToken: newRefreshTokenHash,
           expiresAt: newExpiresAt
         }
       })
@@ -233,6 +251,40 @@ export class AuthController {
 
       return res.status(StatusCodes.OK).json({
         message: "Cấp lại token thành công"
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  public deleteSession = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId
+      if (!userId) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          message: "Yêu cầu đăng nhập"
+        })
+      }
+
+      const allSessions = await prisma.session.findMany({
+        where: {
+          userId: userId
+        },
+        select: {
+          id: true
+        }
+      })
+
+      await prisma.session.deleteMany({
+        where: {
+          id: {
+            in: allSessions.map(session => session.id)
+          }
+        }
+      })
+
+      return res.status(StatusCodes.OK).json({
+        message: "Xoá session thành công"
       })
     } catch (error) {
       next(error)

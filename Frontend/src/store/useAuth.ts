@@ -51,7 +51,6 @@ export const useAuth = create<AuthState>(set => ({
       })
     } catch {
       // Cookie hết hạn hoặc người dùng chưa đăng nhập (401)
-      console.log("lỗi 401")
       set({
         user: null,
         isAuthenticated: false

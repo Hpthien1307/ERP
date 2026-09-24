@@ -25,7 +25,7 @@ import RequestList from "@/components/requestLayout/requestList"
 import { getTodayDateString } from "@/utils/formatters"
 import type { RequestStatsFields } from "@/components/requestLayout/requestStats"
 
-const RequestsList = () => {
+const Request = () => {
   const PAGE_SIZE = 5
   const { user } = useAuth()
   const isManagerOrAdmin = user?.role === "MANAGER" || user?.role === "ADMIN"
@@ -462,4 +462,4 @@ const RequestsList = () => {
   )
 }
 
-export default RequestsList
+export default Request

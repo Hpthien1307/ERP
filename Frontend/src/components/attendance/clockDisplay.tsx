@@ -9,8 +9,6 @@ const ClockDisplay = () => {
     return () => clearInterval(timer)
   }, [])
 
-  console.log("render 2")
-
   return (
     <div className="flex flex-col gap-y-4">
       <span className="text-blue-100 text-md font-medium">{FormatDate(currentTime)}</span>

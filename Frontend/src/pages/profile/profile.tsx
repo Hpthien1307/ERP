@@ -129,7 +129,6 @@ const Profile = () => {
     await updateProfile({ id: user!.id, data: payload }) // truyền đúng shape {id, data} theo useUpdate
     setIsEditing(false)
     setAvatarFile(null)
-    console.log("submit")
   }
 
   return (

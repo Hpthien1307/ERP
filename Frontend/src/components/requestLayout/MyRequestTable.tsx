@@ -4,6 +4,7 @@ import { TABLE_COLUMNS, type RequestItem, type RequestStatus, type RequestType }
 import Pagination from "../pagination/pagination"
 import { formatSliceId } from "@/utils/formatters"
 import { getErrorMessage } from "@/utils/error"
+import React from "react"
 
 type MyRequestTableProps = {
   isPending: boolean
@@ -113,4 +114,4 @@ const MyRequestTable = ({ isPending, error, items, renderTypeBadge, renderStatus
   )
 }
 
-export default MyRequestTable
+export default React.memo(MyRequestTable)

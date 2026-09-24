@@ -3,6 +3,7 @@ import { Spinner } from "../ui/spinner"
 import type { RequestItem, RequestType } from "@/types/requestType"
 import Pagination from "../pagination/pagination"
 import { getErrorMessage } from "@/utils/error"
+import React from "react"
 
 type ReviewRequestTableProps = {
   isPending: boolean
@@ -116,4 +117,4 @@ const ReviewRequestTable = ({
   )
 }
 
-export default ReviewRequestTable
+export default React.memo(ReviewRequestTable)

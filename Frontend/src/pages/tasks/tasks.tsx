@@ -5,7 +5,7 @@ import Textarea from "@/components/ui/textarea"
 import Modal from "@/components/modal/modal"
 import { AlertTriangle, FolderKanban, X } from "lucide-react"
 import { useAuth } from "@/store/useAuth"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { getTodayDateString } from "@/utils/formatters"
 // hooks
 import UseDebounce from "@/hooks/useDebounce"
@@ -169,14 +169,17 @@ const Tasks = () => {
     successMessage: "Xóa công việc thành công!"
   })
 
-  const handleUpdateStatus = (id: string, status: string) => {
-    updateStatus({ id, data: { status } })
-  }
+  const handleUpdateStatus = useCallback(
+    (id: string, status: string) => {
+      updateStatus({ id, data: { status } })
+    },
+    [updateStatus]
+  )
 
-  const handleToggleMyTask = () => {
+  const handleToggleMyTask = useCallback(() => {
     setIsMyTask(prev => !prev)
     setMyPage(1)
-  }
+  }, [])
 
   const handleFormSubmit = async (data: TaskFormValidation) => {
     try {
@@ -197,7 +200,7 @@ const Tasks = () => {
     }
   }
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     reset({
       id: undefined,
       title: "",
@@ -205,13 +208,13 @@ const Tasks = () => {
       assigneeId: "",
       priority: "NORMAL",
       status: "TODO",
-      dueDate: today
+      dueDate: getTodayDateString()
     })
     setCreateModal(false)
     setEditingTask(null)
-  }
+  }, [reset])
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (deleteTaskId) {
       deleteTask(deleteTaskId, {
         onSuccess: () => {
@@ -219,7 +222,19 @@ const Tasks = () => {
         }
       })
     }
-  }
+  }, [deleteTask, deleteTaskId])
+
+  const handlePageChange = useCallback((page: number) => {
+    setMyPage(page)
+  }, [])
+
+  const handleRemoveTask = useCallback((id: string) => {
+    setDeleteTaskId(id)
+  }, [])
+
+  const handleEditTask = useCallback((task: TaskItem) => {
+    setEditingTask(task)
+  }, [])
 
   return (
     <div className="max-w-full mx-auto flex flex-col gap-y-8 pb-16">
@@ -252,10 +267,10 @@ const Tasks = () => {
         error={isError ? (error as Error) || new Error("Không thể tải danh sách công việc") : null}
         pageCount={pageCount}
         page={myPage}
-        onPageChange={page => setMyPage(page)}
+        onPageChange={handlePageChange}
         onUpdateStatus={handleUpdateStatus}
-        onRemove={id => setDeleteTaskId(id)}
-        onEditTask={task => setEditingTask(task)}
+        onRemove={handleRemoveTask}
+        onEditTask={handleEditTask}
       />
 
       {/* MODAL TẠO / SỬA CÔNG VIỆC */}

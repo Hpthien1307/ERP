@@ -9,5 +9,6 @@ authRouter.post("/signin", authController.signin)
 authRouter.post("/signout", verifyToken, authController.signout)
 authRouter.get("/getMe", verifyToken, authController.getMe)
 authRouter.post("/refresh-token", authController.refreshToken)
+authRouter.delete("/deleteSession/:id", verifyToken, authController.deleteSession)
 
 export default authRouter
