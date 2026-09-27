@@ -43,7 +43,7 @@ const AttendanceList = ({ data, isLoading, isError, page, pageCount, onPageChang
                 </td>
               </tr>
             )}
-            {!isLoading && data?.length === 0 && (
+            {!isLoading && !isError && data?.length === 0 && (
               <tr>
                 <td colSpan={6} className=" py-16 text-center font-medium text-slate-400 text-2xl">
                   <FileText size={40} className="mx-auto text-slate-300 mb-3" />

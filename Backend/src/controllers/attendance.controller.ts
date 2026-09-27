@@ -178,14 +178,8 @@ export class AttendanceController {
         whereCondition.date = { gte: startOfMonth, lte: endOfMonth }
       }
 
-      if (filterType === "LATE") {
-        whereCondition.status = "LATE"
-      } else if (filterType === "ON_TIME") {
-        whereCondition.status = "ON_TIME"
-      } else if (filterType === "ABSENT") {
-        whereCondition.status = "ABSENT"
-      } else if (filterType === "LEAVE") {
-        whereCondition.status = "LEAVE"
+      if (filterType) {
+        whereCondition.status = filterType
       }
 
       const [attendances, total] = await Promise.all([
