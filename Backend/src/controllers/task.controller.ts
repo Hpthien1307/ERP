@@ -7,70 +7,9 @@ import { io } from "../server.js"
 import type { AuthRequest } from "../middlewares/auth.middleware.js"
 import { createNotification, NotificationType } from "../services/notification.service.js"
 import { getTaskStatsData } from "../services/task.service.js"
+import type { Prisma } from "@prisma/client"
 
 export class TaskController {
-  // public getTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  //   try {
-  //     const queryValidation = TaskValidation.getPaginatedTask.safeParse(req.query)
-  //     if (!queryValidation.success) {
-  //       return res.status(StatusCodes.BAD_REQUEST).json({
-  //         message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
-  //         errors: queryValidation.error.flatten().fieldErrors
-  //       })
-  //     }
-  //     const { page, limit, search, priority, status, assigneeId } = queryValidation.data
-  //     const skip = (page - 1) * limit
-  //     const whereCondition = {
-  //       ...(status && { status }),
-  //       ...(priority && { priority }),
-  //       ...(assigneeId && { assigneeId }),
-  //       ...(search && {
-  //         title: {
-  //           contains: search,
-  //           mode: "insensitive" as const
-  //         }
-  //       })
-  //     }
-
-  //     const getTask = await prisma.task.findMany({
-  //       where: {
-  //         ...whereCondition,
-  //         departmentId: req.user.departmentId
-  //       },
-  //       skip,
-  //       take: limit,
-  //       orderBy: {
-  //         createdAt: "desc"
-  //       },
-  //       omit: {
-  //         assigneeId: true,
-  //         creatorId: true,
-  //         departmentId: true,
-  //         createdAt: true
-  //       },
-  //       include: {
-  //         assignee: {
-  //           select: {
-  //             id: true,
-  //             fullName: true
-  //           }
-  //         },
-  //         creator: {
-  //           select: {
-  //             id: true,
-  //             fullName: true
-  //           }
-  //         }
-  //       }
-  //     })
-  //     return res.status(StatusCodes.OK).json({
-  //       message: STATUS_MESSAGE.STATUS_OK,
-  //       data: getTask
-  //     })
-  //   } catch (error) {
-  //     next(error)
-  //   }
-  // }
   public getTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const queryValidation = TaskValidation.getPaginatedTask.safeParse(req.query)
@@ -81,10 +20,9 @@ export class TaskController {
         })
       }
 
-      const { page, limit, search, priority, status, assigneeId } = queryValidation.data
+      const { page, limit, search, month, year, priority, status, assigneeId } = queryValidation.data
       const skip = (page - 1) * limit
 
-      // Lấy departmentId của user đang đăng nhập (AuthRequest chỉ có userId, không có sẵn user đầy đủ)
       const currentUser = await prisma.user.findUnique({
         where: { id: req.userId! },
         select: { departmentId: true }
@@ -94,12 +32,23 @@ export class TaskController {
         return res.status(StatusCodes.NOT_FOUND).json({ message: "Không tìm thấy người dùng" })
       }
 
-      const whereCondition = {
-        departmentId: currentUser.departmentId ?? "__NO_DEPARTMENT__", // dùng giá trị "không khớp" nếu user chưa có phòng ban, tránh trả về toàn bộ task
+      const whereCondition: Prisma.taskWhereInput = {
+        departmentId: currentUser.departmentId ?? "__NO_DEPARTMENT__",
         ...(status && { status }),
         ...(priority && { priority }),
         ...(assigneeId && { assigneeId }),
-        ...(search && { title: { contains: search, mode: "insensitive" as const } })
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: "insensitive" as const } },
+            { assignee: { fullName: { contains: search, mode: "insensitive" as const } } }
+          ]
+        })
+      }
+
+      if (month && year) {
+        const startOfMonth = new Date(year, month - 1, 1)
+        const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
+        whereCondition.createdAt = { gte: startOfMonth, lte: endOfMonth }
       }
 
       const [data, total] = await Promise.all([
@@ -167,10 +116,10 @@ export class TaskController {
           errors: queryValidation.error.flatten().fieldErrors
         })
       }
-      const { page, limit, search, priority, status, assigneeId } = queryValidation.data
+      const { page, limit, search, month, year, priority, status, assigneeId } = queryValidation.data
       const skip = (page - 1) * limit
 
-      const whereCondition = {
+      const whereCondition: Prisma.taskWhereInput = {
         assigneeId: userId,
         ...(status && { status }),
         ...(priority && { priority }),
@@ -178,9 +127,15 @@ export class TaskController {
         ...(search && {
           title: {
             contains: search,
-            mode: "insensitive" as const // Tìm kiếm không phân biệt hoa/thường (Postgres)
+            mode: "insensitive" as const
           }
         })
+      }
+
+      if (month && year) {
+        const startOfMonth = new Date(year, month - 1, 1)
+        const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
+        whereCondition.createdAt = { gte: startOfMonth, lte: endOfMonth }
       }
 
       const [myTasks, total] = await Promise.all([
@@ -232,109 +187,20 @@ export class TaskController {
 
   public getTaskStats = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getTaskStatsData(req.userId!)
+      const queryValidation = TaskValidation.getPaginatedTask.safeParse(req.query)
+      if (!queryValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: queryValidation.error.flatten().fieldErrors
+        })
+      }
+      const { month, year, assigneeId, status, priority } = queryValidation.data
+      const data = await getTaskStatsData(req.userId!, month, year, assigneeId, status, priority)
       return res.status(StatusCodes.OK).json({ message: STATUS_MESSAGE.STATUS_OK, data })
     } catch (error) {
       next(error)
     }
   }
-
-  // public createTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  //   try {
-  //     const bodyValidation = TaskValidation.createTask.safeParse(req.body)
-  //     if (!bodyValidation.success) {
-  //       return res.status(StatusCodes.BAD_REQUEST).json({
-  //         message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
-  //         errors: bodyValidation.error.flatten().fieldErrors
-  //       })
-  //     }
-
-  //     const { title, description, status, priority, assigneeId, creatorId, departmentId, dueDate } = bodyValidation.data
-
-  //     if (title) {
-  //       const duplicateTitle = await prisma.task.findUnique({
-  //         where: { title }
-  //       })
-
-  //       if (duplicateTitle) {
-  //         return res.status(StatusCodes.CONFLICT).json({
-  //           message: "Task này đang bị tạo trùng tên"
-  //         })
-  //       }
-  //     }
-
-  //     const finalCreatorId = creatorId || req.userId!
-  //     const finalAssigneeId = assigneeId || finalCreatorId
-
-  //     const getAssignee = await prisma.user.findUnique({
-  //       where: { id: finalAssigneeId }
-  //     })
-
-  //     if (!getAssignee) {
-  //       return res.status(StatusCodes.NOT_FOUND).json({
-  //         message: "Người thực hiện (assignee) không tồn tại"
-  //       })
-  //     }
-
-  //     if (departmentId) {
-  //       const getDepartmentId = await prisma.department.findUnique({
-  //         where: {
-  //           id: departmentId
-  //         }
-  //       })
-
-  //       if (!getDepartmentId) {
-  //         return res.status(StatusCodes.NOT_FOUND).json({
-  //           message: "Phòng bàn không tồn tại"
-  //         })
-  //       }
-  //     }
-
-  //     const createData = await prisma.task.create({
-  //       data: {
-  //         title: title || "",
-  //         description,
-  //         status: status || "TODO",
-  //         priority: priority || "LOW",
-  //         assigneeId: finalAssigneeId,
-  //         creatorId: finalCreatorId,
-  //         departmentId: departmentId || null,
-  //         dueDate: dueDate ? new Date(dueDate) : new Date()
-  //       },
-  //       include: {
-  //         creator: {
-  //           select: {
-  //             id: true,
-  //             fullName: true
-  //           }
-  //         }
-  //       }
-  //     })
-
-  //     io.to(finalAssigneeId).emit("task:assigneeId", {
-  //       message: `Bạn vừa có 1 task mới: ${createData.title}`,
-  //       task: createData
-  //     })
-
-  //     // Gửi thông báo cho nhân viên (assignee) khi được giao task
-  //     if (finalAssigneeId !== finalCreatorId) {
-  //       await createNotification({
-  //         userId: finalAssigneeId,
-  //         type: NotificationType.NEW_TASK,
-  //         title: "Bạn có task mới",
-  //         message: `${createData.creator.fullName} đã giao cho bạn task "${createData.title}"`,
-  //         taskId: createData.id
-  //       })
-  //     }
-
-  //     return res.status(StatusCodes.OK).json({
-  //       message: STATUS_MESSAGE.STATUS_CREATE,
-  //       data: createData
-  //     })
-  //   } catch (error) {
-  //     next(error)
-  //   }
-  // }
 
   public createTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {

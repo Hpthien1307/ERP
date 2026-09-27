@@ -10,7 +10,7 @@ import type { AuthRequest } from "../middlewares/auth.middleware.js"
 
 const ACCESS_TOKEN_JWT_EXP = "15m"
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60 * 1000 // 15 phút
-const REFESH_TOKEN_TTL = 1 * 24 * 60 * 60 * 1000 // 1 ngày
+const REFESH_TOKEN_TTL = 1 * 24 * 60 * 60 * 1000
 
 export const getCookieOptions = () => {
   const isProduction = process.env.NODE_ENV === "production"

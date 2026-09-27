@@ -98,11 +98,11 @@ io.use((socket, next) => {
 // SOCKET CONNECTION
 io.on("connection", socket => {
   const user = socket.data.user
-  console.log("🟢 User kết nối Socket:", user.userId)
+  console.log("User connected:", user.userId)
   socket.join(user.userId)
 
   socket.on("disconnect", reason => {
-    console.log(`🔴 User ${user.userId} ngắt kết nối. Reason: ${reason}`)
+    console.log(`User ${user?.userId} disconnected. Reason: ${reason}`)
   })
 })
 

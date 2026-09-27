@@ -6,7 +6,6 @@ export const AttendanceValidation = {
     year: z.coerce.number().int().min(2020).max(2100).optional(),
     userId: z.string().uuid("userId phải là UUID hợp lệ").optional(),
     departmentId: z.string().uuid("departmentId phải là UUID hợp lệ").optional(),
-    filterDate: z.string().optional(),
     filterType: z.nativeEnum(attendance_status).optional(),
     page: z.coerce.number().int().min(1).optional().default(1),
     limit: z.coerce.number().int().min(1).max(100).optional().default(10)

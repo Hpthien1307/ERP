@@ -44,9 +44,10 @@ enum gender_type {
 }
 
 enum attendance_status {
-  ALL
   ON_TIME
   LATE
+  UNDERTIME
+  LATE_AND_UNDERTIME
   ABSENT
   LEAVE
 }
@@ -121,7 +122,7 @@ model attendance {
   checkIn      DateTime?
   checkOut     DateTime?
   workingHours Float?
-  status       attendance_status @default(ALL)
+  status       attendance_status @default(ABSENT)
   createdAt    DateTime          @default(now())
 
   @@unique([userId, date])

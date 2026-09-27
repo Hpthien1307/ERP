@@ -1,6 +1,5 @@
 import { prisma } from "../config/db.js"
-
-import { calculateAttendanceCounts, calculateAbsentDays } from "../utils/attendanceStats.util.js"
+import { calculateAttendanceCounts, calculateAbsentDays } from "../utils/attendanceCalc.util.js"
 
 export const getAttendanceStatsData = async (userId: string) => {
   const now = new Date()

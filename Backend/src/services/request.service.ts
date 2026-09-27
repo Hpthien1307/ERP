@@ -1,9 +1,21 @@
 import { prisma } from "../config/db.js"
 
-export const getRequestStatsData = async (userId: string) => {
+export const getRequestStatsData = async (userId: string, month?: number, year?: number, type?: string, status?: string) => {
+  const whereCondition: any = {
+    userId,
+    ...(month &&
+      year && {
+        createdAt: {
+          gte: new Date(Date.UTC(year, month - 1, 1)),
+          lte: new Date(Date.UTC(year, month, 0, 23, 59, 59, 999))
+        }
+      }),
+    ...(type && { type }),
+    ...(status && { status })
+  }
   const grouped = await prisma.request.groupBy({
     by: ["status"],
-    where: { userId },
+    where: whereCondition,
     _count: { _all: true }
   })
 

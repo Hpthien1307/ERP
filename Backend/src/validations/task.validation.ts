@@ -22,6 +22,8 @@ export const TaskValidation = {
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(10),
     search: z.string().optional(),
+    month: z.coerce.number().int().min(1).max(12).optional(),
+    year: z.coerce.number().int().min(2020).max(2100).optional(),
     priority: z.nativeEnum(priority_level).optional(),
     assigneeId: z.string().uuid("assigneeId phải là UUID hợp lệ").optional(),
     status: z.nativeEnum(task_status).optional()

@@ -5,15 +5,43 @@ import { StatusCodes } from "http-status-codes"
 import { RequestValidation } from "../validations/request.validation.js"
 import type { AuthRequest } from "../middlewares/auth.middleware.js"
 import { createNotification, NotificationType } from "../services/notification.service.js"
-import { getPaginationParams, buildPaginationResponse } from "../utils/pagination.util.js"
+import { buildPaginationResponse } from "../utils/pagination.util.js"
 import { getRequestStatsData } from "../services/request.service.js"
 
 export class RequestController {
   public getRequest = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { page, limit, skip } = getPaginationParams(req)
+      const queryValidation = RequestValidation.getPaginatedRequest.safeParse(req.query)
+      if (!queryValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: queryValidation.error.flatten().fieldErrors
+        })
+      }
+      const { page, limit, search, month, year, type, status } = queryValidation.data
+      const skip = (page - 1) * limit
+
+      const whereCondition = {
+        ...(month &&
+          year && {
+            createdAt: {
+              gte: new Date(Date.UTC(year, month - 1, 1)),
+              lte: new Date(Date.UTC(year, month, 0, 23, 59, 59, 999))
+            }
+          }),
+        ...(type && { type }),
+        ...(status && { status }),
+        ...(search && {
+          OR: [
+            { reason: { contains: search, mode: "insensitive" as const } },
+            { user: { fullName: { contains: search, mode: "insensitive" as const } } }
+          ]
+        })
+      }
+
       const [data, total] = await Promise.all([
         prisma.request.findMany({
+          where: whereCondition,
           orderBy: {
             createdAt: "desc"
           },
@@ -52,7 +80,15 @@ export class RequestController {
 
   public getRequestStats = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const data = await getRequestStatsData(req.userId!)
+      const queryValidation = RequestValidation.getPaginatedRequest.safeParse(req.query)
+      if (!queryValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: queryValidation.error.flatten().fieldErrors
+        })
+      }
+      const { month, year, type, status } = queryValidation.data
+      const data = await getRequestStatsData(req.userId!, month, year, type, status)
       return res.status(StatusCodes.OK).json({ message: STATUS_MESSAGE.STATUS_OK, data })
     } catch (error) {
       next(error)
@@ -89,7 +125,7 @@ export class RequestController {
       }
 
       const whereCondition = {
-        status: status ?? "PENDING", // mặc định PENDING nếu không truyền status khác
+        status: status ?? "PENDING",
         ...(type && { type }),
         ...(search && { reason: { contains: search, mode: "insensitive" as const } }),
         ...(currentUser.role !== "ADMIN" && {
@@ -146,14 +182,23 @@ export class RequestController {
         })
       }
 
-      const { page, limit, search, type, status } = queryValidation.data
+      const { page, limit, search, month, year, type, status } = queryValidation.data
       const skip = (page - 1) * limit
 
       const whereCondition = {
         userId: req.userId,
+        ...(month &&
+          year && {
+            createdAt: {
+              gte: new Date(Date.UTC(year, month - 1, 1)),
+              lte: new Date(Date.UTC(year, month, 0, 23, 59, 59, 999))
+            }
+          }),
         ...(type && { type }),
         ...(status && { status }),
-        ...(search && { reason: { contains: search, mode: "insensitive" as const } })
+        ...(search && {
+          OR: [{ reason: { contains: search, mode: "insensitive" as const } }]
+        })
       }
 
       const [data, total] = await Promise.all([
@@ -162,6 +207,9 @@ export class RequestController {
           include: {
             reviewer: { select: { fullName: true } },
             user: { select: { fullName: true } }
+          },
+          omit: {
+            reviewedBy: true
           },
           orderBy: { createdAt: "desc" },
           skip,

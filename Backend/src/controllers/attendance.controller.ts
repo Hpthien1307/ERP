@@ -4,8 +4,8 @@ import { prisma } from "../config/db.js"
 import { AttendanceValidation } from "../validations/attendance.validation.js"
 import { STATUS_MESSAGE } from "../constant/systemMessage.js"
 import type { AuthRequest } from "../middlewares/auth.middleware.js"
-import { calculateAttendanceCounts, calculateAbsentDays } from "../utils/attendanceStats.util.js"
 import { getAttendanceStatsData } from "../services/attendance.service.js"
+import { calculateFinalStatus, getCheckInStatus } from "../utils/attendanceCalc.util.js"
 
 // Hàm tiện ích: Lấy mốc bắt đầu (00:00:00) và kết thúc (23:59:59.999) của ngày hiện tại
 const getDayRange = (dateInput = new Date()) => {
@@ -58,16 +58,18 @@ export class AttendanceController {
       }
 
       const now = new Date()
+      const status = getCheckInStatus(now)
       const newAttendance = await prisma.attendance.create({
         data: {
           userId,
           date: now,
-          checkIn: now
+          checkIn: now,
+          status: status
         }
       })
 
       return res.status(StatusCodes.CREATED).json({
-        message: "Check-in thành công",
+        message: status === "LATE" ? "Check-in thành công (Đi trễ)" : "Check-in thành công",
         data: newAttendance
       })
     } catch (error) {
@@ -79,47 +81,35 @@ export class AttendanceController {
   public checkOut = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.userId
-
       const { startOfDay, endOfDay } = getDayRange()
 
       const existingAttendance = await prisma.attendance.findFirst({
         where: {
           userId,
-          date: {
-            gte: startOfDay,
-            lte: endOfDay
-          }
+          date: { gte: startOfDay, lte: endOfDay }
         }
       })
 
-      if (!existingAttendance) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-          message: "Bạn chưa thực hiện check-in hôm nay"
-        })
-      }
-
-      if (!existingAttendance.checkIn) {
+      if (!existingAttendance || !existingAttendance.checkIn) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           message: "Bạn chưa thực hiện check-in hôm nay"
         })
       }
 
       const checkOutTime = new Date()
-
-      // Tính tổng số giờ làm việc
       const diffMs = checkOutTime.getTime() - existingAttendance.checkIn.getTime()
-
       const rawHours = diffMs / (1000 * 60 * 60)
-
       const workingHours = Math.round(rawHours * 100) / 100
 
+      // 💡 TÍNH LẠI TRẠNG THÁI CUỐI CÙNG DỰA TRÊN CHECK-IN VÀ TỔNG GIỜ LÀM
+      const finalStatus = calculateFinalStatus(existingAttendance.checkIn, workingHours)
+
       const updatedAttendance = await prisma.attendance.update({
-        where: {
-          id: existingAttendance.id
-        },
+        where: { id: existingAttendance.id },
         data: {
           checkOut: checkOutTime,
-          workingHours
+          workingHours,
+          status: finalStatus // 🟢 Cập nhật đúng status (ví dụ: UNDERTIME / Thiếu giờ)
         }
       })
 
@@ -131,7 +121,6 @@ export class AttendanceController {
       next(error)
     }
   }
-
   // LẤY TRẠNG THÁI CHẤM CÔNG HÔM NAY
   public getTodayStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -178,28 +167,18 @@ export class AttendanceController {
         })
       }
 
-      const { month, year, page, limit, filterDate, filterType } = queryValidation.data
+      const { month, year, page, limit, filterType } = queryValidation.data
       const skip = (page - 1) * limit
 
       const whereCondition: any = { userId }
 
-      if (filterDate) {
-        const targetDate = new Date(filterDate)
-        const startOfDay = new Date(targetDate)
-        startOfDay.setHours(0, 0, 0, 0)
-        const endOfDay = new Date(targetDate)
-        endOfDay.setHours(23, 59, 59, 999)
-
-        whereCondition.date = { gte: startOfDay, lte: endOfDay }
-      } else if (month && year) {
+      if (month && year) {
         const startOfMonth = new Date(year, month - 1, 1)
         const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
         whereCondition.date = { gte: startOfMonth, lte: endOfMonth }
       }
 
-      if (filterType === "ALL") {
-        whereCondition.status = "ALL"
-      } else if (filterType === "LATE") {
+      if (filterType === "LATE") {
         whereCondition.status = "LATE"
       } else if (filterType === "ON_TIME") {
         whereCondition.status = "ON_TIME"

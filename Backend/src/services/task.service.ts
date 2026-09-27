@@ -1,9 +1,28 @@
 import { prisma } from "../config/db.js"
 
-export const getTaskStatsData = async (userId: string) => {
+export const getTaskStatsData = async (
+  userId: string,
+  month?: number,
+  year?: number,
+  assigneeId?: string,
+  status?: string,
+  priority?: string
+) => {
+  const whereCondition: any = {
+    assigneeId: assigneeId ?? userId,
+    ...(month &&
+      year && {
+        createdAt: {
+          gte: new Date(Date.UTC(year, month - 1, 1)),
+          lte: new Date(Date.UTC(year, month, 0, 23, 59, 59, 999))
+        }
+      }),
+    ...(status && { status }),
+    ...(priority && { priority })
+  }
   const grouped = await prisma.task.groupBy({
     by: ["status"],
-    where: { assigneeId: userId },
+    where: whereCondition,
     _count: { _all: true }
   })
 

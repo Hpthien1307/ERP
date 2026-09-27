@@ -8,10 +8,36 @@ import { STATUS_MESSAGE } from "../constant/systemMessage.js"
 export class UserController {
   public getUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const queryValidation = UserValidation.getUsers.safeParse(req.query)
+      if (!queryValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: queryValidation.error.flatten().fieldErrors
+        })
+      }
+
+      const { page, limit, search, positionId, departmentId, role } = queryValidation.data
+      const skip = (page - 1) * limit
+
+      const whereCondition = {
+        ...(search && {
+          OR: [
+            { email: { contains: search, mode: "insensitive" as const } },
+            { fullName: { contains: search, mode: "insensitive" as const } }
+          ]
+        }),
+        ...(positionId && { positionId }),
+        ...(departmentId && { departmentId }),
+        ...(role && { role })
+      }
+
       const getUsers = await prisma.user.findMany({
+        where: whereCondition,
         orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
         omit: {
-          // password: true,
+          password: true,
           positionId: true,
           departmentId: true
         },
