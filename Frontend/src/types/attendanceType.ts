@@ -34,7 +34,7 @@ export type AttendanceStatsResponse = {
   data: AttendanceStats
 }
 
-export type AttendanceFilterType = "ALL" | "ON_TIME" | "LATE" | "ABSENT" | "LEAVE"
+export type AttendanceFilterType = "ON_TIME" | "LATE" | "ABSENT" | "LEAVE" | "UNDERTIME" | "LATE_AND_UNDERTIME"
 
 export const TABLE_ATT_COLUMN = [
   {
@@ -62,6 +62,8 @@ export const TABLE_ATT_COLUMN = [
 export const SELECT_ATT_OPTIONS = [
   { value: "ALL", label: "Tất cả" },
   { value: "ON_TIME", label: "Đúng giờ" },
+  { value: "UNDERTIME", label: "Thiếu giờ" },
+  { value: "LATE_AND_UNDERTIME", label: "Trễ & Thiếu giờ" },
   { value: "LATE", label: "Đi trễ" },
   { value: "ABSENT", label: "Vắng mặt" },
   { value: "LEAVE", label: "Nghỉ phép" }

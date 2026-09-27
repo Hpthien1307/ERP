@@ -5,16 +5,14 @@ import Select from "@/components/ui/select"
 import Textarea from "@/components/ui/textarea"
 import { useAuth } from "@/store/useAuth"
 import { Calendar, Clock, CheckCircle2, XCircle, AlertCircle, Home, X, Send, CalendarDays } from "lucide-react"
-import type { RequestItem, RequestType, RequestStatus, PaginatedRequestResponse } from "@/types/requestType"
+import type { RequestItem, RequestType, RequestStatus } from "@/types/requestType"
 import { REQUEST_TYPE_OPTIONS } from "@/types/requestType"
-import useFetch from "@/hooks/useFetch"
 import UseDebounce from "@/hooks/useDebounce"
 import { Spinner } from "@/components/ui/spinner"
 import type { RequestFormState } from "@/validators/requestValidation"
 import { createRequestSchema } from "@/validators/requestValidation"
 import { showToast } from "@/components/ui/toast"
-import { useCreate } from "@/hooks/useCreate"
-import { useUpdate } from "@/hooks/useUdate"
+import { useMyRequests, useReviewRequests, useRequestStats, useCreateRequest, useReviewRequest } from "@/hooks/useRequests"
 
 // component
 import Modal from "@/components/modal/modal"
@@ -23,7 +21,6 @@ import RequestStats from "@/components/requestLayout/requestStats"
 import RequestFilter from "@/components/requestLayout/requestFilter"
 import RequestList from "@/components/requestLayout/requestList"
 import { getTodayDateString } from "@/utils/formatters"
-import type { RequestStatsFields } from "@/components/requestLayout/requestStats"
 
 const Request = () => {
   const PAGE_SIZE = 5
@@ -35,6 +32,8 @@ const Request = () => {
   const [selectedType, setSelectedType] = useState("ALL")
   const [selectedStatus, setSelectedStatus] = useState("ALL")
   const searchDebounce = UseDebounce(search, 500)
+  const [month, setMonth] = useState(String(new Date().getMonth() + 1))
+  const [year, setYear] = useState(String(new Date().getFullYear()))
 
   // ==== Modal state ====
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -52,52 +51,30 @@ const Request = () => {
   const [errors, setErrors] = useState<Partial<Record<keyof RequestFormState, string>>>({})
   const [myPage, setMyPage] = useState(1)
   const [reviewPage, setReviewPage] = useState(1)
+
   useEffect(() => {
     setMyPage(1)
     setReviewPage(1)
-  }, [searchDebounce, selectedType, selectedStatus])
+  }, [searchDebounce, month, year, selectedType, selectedStatus])
 
-  // ==== Fetch "Đơn của tôi" ====
-  const {
-    data: myRequestData,
-    isPending: isMyRequestPending,
-    error: myRequestError
-  } = useFetch<PaginatedRequestResponse>({
-    url: `/request/user`,
-    key: ["get_my_requests", myPage, searchDebounce, selectedType, selectedStatus],
-    params: {
-      page: myPage,
-      limit: PAGE_SIZE,
-      search: searchDebounce || undefined,
-      type: selectedType !== "ALL" ? selectedType : undefined,
-      status: selectedStatus !== "ALL" ? selectedStatus : undefined
-    }
-  })
+  // ==== Queries ====
+  const commonParams = {
+    search: searchDebounce || undefined,
+    month: month,
+    year: year,
+    type: selectedType !== "ALL" ? selectedType : undefined,
+    status: selectedStatus !== "ALL" ? selectedStatus : undefined
+  }
 
-  // ==== Fetch "Đơn cần duyệt" (chỉ Manager/Admin, chỉ khi đang mở tab review) ====
+  const { data: myRequestData, isPending: isMyRequestPending, error: myRequestError } = useMyRequests({ page: myPage, limit: PAGE_SIZE, ...commonParams })
+
   const {
     data: reviewRequestData,
     isPending: isReviewRequestPending,
     error: reviewRequestError
-  } = useFetch<PaginatedRequestResponse>({
-    url: "/request/manager",
-    key: ["get_review_requests", reviewPage, searchDebounce, selectedType, selectedStatus],
-    enabled: isManagerOrAdmin && activeTab === "review",
-    params: {
-      page: reviewPage,
-      limit: PAGE_SIZE,
-      search: searchDebounce || undefined,
-      type: selectedType !== "ALL" ? selectedType : undefined,
-      status: selectedStatus !== "ALL" ? selectedStatus : undefined
-    }
-  })
+  } = useReviewRequests({ page: reviewPage, limit: PAGE_SIZE, ...commonParams }, isManagerOrAdmin && activeTab === "review")
 
-  const { data: requestStatsData } = useFetch<{ message: string; data: RequestStatsFields }>({
-    url: "/request/stats",
-    key: ["request_stats"]
-  })
-
-  // Không còn filter thủ công nữa — data BE trả về đã đúng theo search/type/status
+  const { data: requestStatsData } = useRequestStats({ page: reviewPage, limit: PAGE_SIZE, ...commonParams })
 
   const myRequests = myRequestData?.data ?? []
   const myPageCount = myRequestData?.pagination?.totalPages ?? 1
@@ -108,21 +85,12 @@ const Request = () => {
   const stats = requestStatsData?.data ?? { total: 0, pending: 0, approved: 0, rejected: 0 }
 
   // ==== Mutations ====
-  const { mutate: reviewRequestMutate, isPending: isReviewing } = useUpdate({
-    url: "request",
-    invalidateKey: ["get_review_requests"],
-    successMessage: "Xử lý đơn thành công!"
-  })
-
-  const { mutate: createRequest, isPending: isSubmitting } = useCreate({
-    url: "/request",
-    invalidateKey: ["get_my_requests"],
-    successMessage: "Gửi yêu cầu thành công!"
-  })
+  const { mutate: reviewRequest, isPending: isReviewing } = useReviewRequest()
+  const { mutate: createRequest, isPending: isSubmitting } = useCreateRequest()
 
   // ==== Handlers ====
   const handleApprove = (id: string) => {
-    reviewRequestMutate({ id, data: { status: "APPROVED" }, subPath: "review" })
+    reviewRequest({ id, payload: { status: "APPROVED" } })
   }
 
   const handleOpenReject = (item: RequestItem) => {
@@ -135,10 +103,9 @@ const Request = () => {
       showToast.error("Vui lòng nhập lý do từ chối!")
       return
     }
-    reviewRequestMutate({
+    reviewRequest({
       id: rejectTarget.id,
-      data: { status: "REJECTED", rejectReason: rejectReasonInput.trim() },
-      subPath: "review"
+      payload: { status: "REJECTED", rejectReason: rejectReasonInput.trim() }
     })
     setRejectTarget(null)
     setRejectReasonInput("")
@@ -232,10 +199,14 @@ const Request = () => {
       <RequestStats activeTab={activeTab} user={user} stats={stats} />
 
       <RequestFilter
+        month={month}
+        year={year}
         search={search}
         selectedType={selectedType}
         selectedStatus={selectedStatus}
         setSearch={setSearch}
+        setMonth={setMonth}
+        setYear={setYear}
         setSelectedType={setSelectedType}
         setSelectedStatus={setSelectedStatus}
       />

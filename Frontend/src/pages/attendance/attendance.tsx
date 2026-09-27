@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react"
-import type { AttendanceListResponse } from "@/types/attendanceType"
 import { getTodayDateString } from "@/utils/formatters"
 
 // component
@@ -8,13 +7,15 @@ import AttendanceStatus from "@/components/attendance/attendanceStatus"
 import AttendanceStats from "@/components/attendance/attendanceStats"
 import AttendaceFilter from "@/components/attendance/attendanceFilter"
 import AttendanceList from "@/components/attendance/attendanceList"
-import useFetch from "@/hooks/useFetch"
+import { useAttendanceHistory } from "@/hooks/useAttendance"
 import { type AttendanceFilterType } from "@/types/attendanceType"
 
 const Attendance = () => {
   const [filterDate, setFilterDate] = useState<string>("")
-  const [filterStatus, setFilterStatus] = useState<AttendanceFilterType>("ALL")
+  const [filterStatus, setFilterStatus] = useState("ALL")
   const [myPage, setMyPage] = useState<number>(1)
+  const [month, setMonth] = useState(String(new Date().getMonth() + 1))
+  const [year, setYear] = useState(String(new Date().getFullYear()))
   const PAGE_SIZE = 5
 
   useEffect(() => {
@@ -25,15 +26,12 @@ const Attendance = () => {
     data: historyData,
     isPending: isHistoryPending,
     isError: isHistoryError
-  } = useFetch<AttendanceListResponse>({
-    url: "/attendance/me",
-    key: ["get_mine_attendance", myPage, filterStatus, filterDate],
-    params: {
-      page: myPage,
-      limit: PAGE_SIZE,
-      filterDate: filterDate,
-      filterType: filterStatus === "ALL" ? undefined : filterStatus
-    }
+  } = useAttendanceHistory({
+    page: myPage,
+    limit: PAGE_SIZE,
+    month,
+    year,
+    filterType: filterStatus !== "ALL" ? filterStatus : undefined
   })
 
   const historyAttendance = historyData?.data ?? []
@@ -57,10 +55,14 @@ const Attendance = () => {
       {/* 4. BỘ LỌC LỊCH SỬ CHẤM CÔNG */}
       <AttendaceFilter
         today={getTodayDateString()}
+        month={month}
+        year={year}
         filterStatus={filterStatus}
         filterDate={filterDate}
         setFilterStatus={handleFilterStatus}
         setFilterDate={setFilterDate}
+        setMonth={setMonth}
+        setYear={setYear}
       />
 
       {/* 5. BẢNG LỊCH SỬ */}

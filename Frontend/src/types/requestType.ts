@@ -5,13 +5,14 @@ export type RequestType = "LEAVE" | "WFH" | "OT"
 export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED"
 
 export const REQUEST_TYPE_OPTIONS = [
-  { value: "ALL", label: "Tất cả" },
+  { value: "ALL", label: "Tất cả loại đơn" },
   { value: "LEAVE", label: "Nghỉ phép" },
   { value: "WFH", label: "Làm từ xa" },
   { value: "OT", label: "Tăng ca" }
 ]
 
 export const REQUEST_STATUS_OPTIONS = [
+  { value: "ALL", label: "Tất cả trạng thái " },
   { value: "PENDING", label: "Chờ duyệt" },
   { value: "APPROVED", label: "Đã duyệt" },
   { value: "REJECTED", label: "Từ chối" }

@@ -1,34 +1,27 @@
 import { useState } from "react"
 import { useAuth } from "@/store/useAuth"
-import useFetch from "@/hooks/useFetch"
 import { Spinner } from "@/components/ui/spinner"
 import { LayoutDashboard, XCircle } from "lucide-react"
 import AttendanceChart from "@/components/dashboard/attendanceChart"
 import TaskChart from "@/components/dashboard/taskChart"
 import RequestChart from "@/components/dashboard/requestChart"
 import EmployeeFilter from "@/components/dashboard/employeeFilter"
-import type { DashboardStatsResponse, EmployeeOption } from "@/types/dashboardType"
+import { useDashboardEmployees, useDashboardStats } from "@/hooks/useDashboard"
 
 const Dashboard = () => {
   const { user } = useAuth()
   const isManagerOrAdmin = user?.role === "MANAGER" || user?.role === "ADMIN"
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(user?.id ?? "")
 
-  const { data: employeesData } = useFetch<{ message: string; data: EmployeeOption[] }>({
-    url: "/dashboard/employees",
-    key: ["dashboard_employees"],
-    enabled: isManagerOrAdmin
-  })
+  const { data: employeesData } = useDashboardEmployees(isManagerOrAdmin)
 
   const {
     data: statsData,
     isPending,
     error
-  } = useFetch<DashboardStatsResponse>({
-    url: "/dashboard/stats",
-    key: ["dashboard_stats", selectedEmployeeId],
-    params: { userId: selectedEmployeeId !== user?.id ? selectedEmployeeId : undefined }
-  })
+  } = useDashboardStats(
+    selectedEmployeeId !== user?.id ? { userId: selectedEmployeeId } : undefined
+  )
 
   const stats = statsData?.data
 

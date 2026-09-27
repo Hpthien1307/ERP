@@ -9,25 +9,23 @@ import { useCallback, useEffect, useState } from "react"
 import { getTodayDateString } from "@/utils/formatters"
 // hooks
 import UseDebounce from "@/hooks/useDebounce"
-import useFetch from "@/hooks/useFetch"
-import { useUpdate } from "@/hooks/useUdate"
-import { useDelete } from "@/hooks/useDelete"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useTasks, useTaskStats, useCreateTask, useUpdateTask, useDeleteTask } from "@/hooks/useTasks"
 // components
 import TaskHeader from "@/components/task/taskHeader"
 import TaskFilter from "@/components/task/taskFilter"
 import TaskStats from "@/components/task/taskStats"
 import TaskList from "@/components/task/taskList"
 import type { TaskStatsFields } from "@/components/task/taskStats"
-import type { TaskItem, TaskListResponse } from "@/types/taskType"
+import type { TaskItem } from "@/types/taskType"
 import { taskSchema, type TaskFormValidation } from "@/validators/taskValidation"
-import { useCreate } from "@/hooks/useCreate"
 import { Spinner } from "@/components/ui/spinner"
 import { TASK_TYPE_OPTIONS, TASK_PRIORITY_OPTIONS } from "@/types/taskType"
 import { showToast } from "@/components/ui/toast"
 
 const Tasks = () => {
+  const PAGE_SIZE = 10
   const { user } = useAuth()
   const [createModal, setCreateModal] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null)
@@ -39,6 +37,8 @@ const Tasks = () => {
   const [selectedPriority, setSelectedPriority] = useState("ALL")
   const [selectedCreator, setSelectedCreator] = useState("ALL")
   const searchDebounce = UseDebounce(search, 500)
+  const [month, setMonth] = useState(String(new Date().getMonth() + 1))
+  const [year, setYear] = useState(String(new Date().getFullYear()))
   const today = getTodayDateString()
 
   const isManager = user?.role === "MANAGER"
@@ -73,7 +73,16 @@ const Tasks = () => {
   // Reset trang về 1 khi bất kỳ điều kiện lọc nào thay đổi
   useEffect(() => {
     setMyPage(1)
-  }, [searchDebounce, selectedStatus, selectedPriority, selectedCreator, isMyTask])
+  }, [searchDebounce, month, year, selectedStatus, selectedPriority, selectedCreator, isMyTask])
+
+  const commonParams = {
+    search: searchDebounce.trim() || undefined,
+    month,
+    year,
+    status: selectedStatus !== "ALL" ? selectedStatus : undefined,
+    priority: selectedPriority !== "ALL" ? selectedPriority : undefined,
+    assigneeId: !isMyTask && selectedCreator !== "ALL" ? selectedCreator : undefined
+  }
 
   // fetch tasks (tất cả hoặc công việc của tôi)
   const {
@@ -81,17 +90,21 @@ const Tasks = () => {
     isPending: loadingTasks,
     isError,
     error
-  } = useFetch<TaskListResponse>({
-    url: isMyTask ? "/task/me" : "/task",
-    key: ["tasks", isMyTask ? "my_tasks" : "all_tasks", myPage, searchDebounce, selectedStatus, selectedPriority, selectedCreator],
-    params: {
-      page: myPage,
-      limit: 10,
-      search: searchDebounce.trim() || undefined,
-      status: selectedStatus !== "ALL" ? selectedStatus : undefined,
-      priority: selectedPriority !== "ALL" ? selectedPriority : undefined,
-      assigneeId: !isMyTask && selectedCreator !== "ALL" ? selectedCreator : undefined
-    }
+  } = useTasks(isMyTask, {
+    page: myPage,
+    limit: PAGE_SIZE,
+    ...commonParams
+  })
+
+  const { data: taskStatsData } = useTaskStats({
+    page: myPage,
+    limit: PAGE_SIZE,
+    search: searchDebounce.trim() || undefined,
+    month,
+    year,
+    status: selectedStatus !== "ALL" ? selectedStatus : undefined,
+    priority: selectedPriority !== "ALL" ? selectedPriority : undefined,
+    assigneeId: !isMyTask && selectedCreator !== "ALL" ? selectedCreator : undefined
   })
 
   // form
@@ -111,11 +124,6 @@ const Tasks = () => {
       status: "TODO",
       dueDate: today
     }
-  })
-
-  const { data: taskStatsData } = useFetch<{ message: string; data: TaskStatsFields }>({
-    url: "/task/stats",
-    key: ["task_stats"]
   })
 
   useEffect(() => {
@@ -143,38 +151,11 @@ const Tasks = () => {
   }, [editingTask, createModal, reset, today])
 
   const pageCount = dataTasks?.pagination?.totalPages ?? 1
-  const stats = taskStatsData?.data ?? { total: 0, todo: 0, inProgress: 0, inReview: 0, completed: 0, overDue: 0 }
+  const stats = taskStatsData?.data ?? ({ total: 0, todo: 0, inProgress: 0, inReview: 0, completed: 0, overDue: 0 } as TaskStatsFields)
 
-  const { mutate: updateStatus } = useUpdate({
-    url: "/task",
-    invalidateKey: ["tasks"],
-    successMessage: "Cập nhật trạng thái công việc thành công!"
-  })
-
-  const { mutateAsync: createTask } = useCreate<TaskFormValidation>({
-    url: "/task",
-    invalidateKey: ["tasks"],
-    successMessage: "Tạo công việc mới thành công!"
-  })
-
-  const { mutateAsync: updateTask } = useUpdate<Partial<TaskFormValidation>>({
-    url: "/task",
-    invalidateKey: ["tasks"],
-    successMessage: "Cập nhật công việc thành công!"
-  })
-
-  const { mutate: deleteTask, isPending: isDeleting } = useDelete({
-    url: "/task",
-    invalidateKey: ["tasks"],
-    successMessage: "Xóa công việc thành công!"
-  })
-
-  const handleUpdateStatus = useCallback(
-    (id: string, status: string) => {
-      updateStatus({ id, data: { status } })
-    },
-    [updateStatus]
-  )
+  const { mutateAsync: createTask } = useCreateTask()
+  const { mutateAsync: updateTask } = useUpdateTask()
+  const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
 
   const handleToggleMyTask = useCallback(() => {
     setIsMyTask(prev => !prev)
@@ -193,6 +174,7 @@ const Tasks = () => {
       } else {
         await createTask(data)
       }
+      showToast.success(editingTask ? "Cập nhật công việc thành công!" : "Tạo công việc thành công!")
       handleCancel()
     } catch (error) {
       console.error(error)
@@ -246,6 +228,10 @@ const Tasks = () => {
 
       {/* 3. BỘ LỌC & TÌM KIẾM (SỬ DỤNG INPUT & SELECT) */}
       <TaskFilter
+        month={month}
+        year={year}
+        setMonth={setMonth}
+        setYear={setYear}
         isMyTask={isMyTask}
         handleMyTask={handleToggleMyTask}
         search={search}
@@ -268,7 +254,6 @@ const Tasks = () => {
         pageCount={pageCount}
         page={myPage}
         onPageChange={handlePageChange}
-        onUpdateStatus={handleUpdateStatus}
         onRemove={handleRemoveTask}
         onEditTask={handleEditTask}
       />

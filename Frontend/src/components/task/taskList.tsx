@@ -14,7 +14,6 @@ type TaskListProps = {
   pageCount: number
   page: number
   onPageChange: (page: number) => void
-  onUpdateStatus?: (id: string, status: string) => void
   onRemove: (id: string) => void
   onEditTask?: (task: TaskItem) => void
 }

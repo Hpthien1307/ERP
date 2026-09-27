@@ -1,12 +1,10 @@
 import { AlertCircle, CheckCircle2, TrendingUp, XCircle } from "lucide-react"
-import useFetch from "@/hooks/useFetch"
-import type { AttendanceStatsResponse } from "@/types/attendanceType"
+import { useAttendanceStats } from "@/hooks/useAttendance"
+
 const AttendanceStats = () => {
-  const { data: statsData } = useFetch<AttendanceStatsResponse>({
-    url: "/attendance/me/stats",
-    key: ["attendance-stats"]
-  })
+  const { data: statsData } = useAttendanceStats()
   const stats = statsData?.data
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
       <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex items-center gap-x-4">

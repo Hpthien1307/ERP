@@ -1,5 +1,5 @@
 import { TABLE_ATT_COLUMN, type AttendanceItem } from "@/types/attendanceType"
-import { Calendar, FileText, XCircle } from "lucide-react"
+import { AlertTriangle, Calendar, CheckCircle2, Clock, FileText, XCircle } from "lucide-react"
 import { Spinner } from "../ui/spinner"
 import { FormatDate, FormatDateTime } from "@/utils/formatters"
 import Pagination from "../pagination/pagination"
@@ -67,20 +67,41 @@ const AttendanceList = ({ data, isLoading, isError, page, pageCount, onPageChang
                 <td className="py-5 px-6">
                   {attendance.status === "ON_TIME" && (
                     <span className="inline-flex items-center gap-x-1.5 px-3.5 py-1.5 rounded-full text-xl font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                      <CheckCircle2 size={15} />
                       Đúng giờ
                     </span>
                   )}
+
                   {attendance.status === "LATE" && (
                     <span className="inline-flex items-center gap-x-1.5 px-3.5 py-1.5 rounded-full text-xl font-semibold border bg-amber-50 text-amber-700 border-amber-200">
+                      <Clock size={15} />
                       Đi trễ
                     </span>
                   )}
+
+                  {/* 🟢 Thêm mới trạng thái Thiếu giờ */}
+                  {attendance.status === "UNDERTIME" && (
+                    <span className="inline-flex items-center gap-x-1.5 px-3.5 py-1.5 rounded-full text-xl font-semibold border bg-orange-50 text-orange-700 border-orange-200">
+                      <AlertTriangle size={15} />
+                      Thiếu giờ
+                    </span>
+                  )}
+
+                  {/* 🟢 Thêm mới trạng thái Vừa trễ vừa thiếu giờ */}
+                  {attendance.status === "LATE_AND_UNDERTIME" && (
+                    <span className="inline-flex items-center gap-x-1.5 px-3.5 py-1.5 rounded-full text-xl font-semibold border bg-purple-50 text-purple-700 border-purple-200">
+                      <AlertTriangle size={15} />
+                      Trễ & Thiếu giờ
+                    </span>
+                  )}
+
                   {attendance.status === "ABSENT" && (
                     <span className="inline-flex items-center gap-x-1.5 px-3.5 py-1.5 rounded-full text-xl font-semibold border bg-rose-50 text-rose-700 border-rose-200">
                       <XCircle size={15} />
                       Vắng mặt
                     </span>
                   )}
+
                   {attendance.status === "LEAVE" && (
                     <span className="inline-flex items-center gap-x-1.5 px-3.5 py-1.5 rounded-full text-xl font-semibold border bg-blue-50 text-blue-700 border-blue-200">
                       <Calendar size={15} />

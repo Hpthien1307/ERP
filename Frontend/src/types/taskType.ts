@@ -62,9 +62,13 @@ export type TaskListResponse = {
   pagination: PaginationType
 }
 
-export type TaskListParams = {
-  status?: string
-  priority?: string
+export type GetTasksParams = {
   page?: number
   limit?: number
+  search?: string
+  month?: string
+  year?: string
+  status?: string
+  priority?: string
+  assigneeId?: string
 }
