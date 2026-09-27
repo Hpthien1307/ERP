@@ -1,17 +1,13 @@
-import { CalendarClock, Filter, Search } from "lucide-react"
-import Input from "../ui/input"
+import { CalendarClock, Filter } from "lucide-react"
 import Select from "../ui/select"
 import { SELECT_ATT_OPTIONS } from "@/types/attendanceType"
 
 type AttendaceFilterProps = {
-  today: string
   month: string
   year: string
-  filterDate: string
   filterStatus: string
   setMonth: (month: string) => void
   setYear: (year: string) => void
-  setFilterDate: (search: string) => void
   setFilterStatus: (filter: string) => void
 }
 
@@ -25,7 +21,7 @@ const YEAR_OPTIONS = Array.from({ length: 3 }, (_, i) => {
   return { value: String(year), label: `Năm ${year}` }
 })
 
-const AttendaceFilter = ({ today, month, year, filterDate, filterStatus, setMonth, setYear, setFilterDate, setFilterStatus }: AttendaceFilterProps) => {
+const AttendaceFilter = ({ month, year, filterStatus, setMonth, setYear, setFilterStatus }: AttendaceFilterProps) => {
   const monthOptions = Array.from({ length: Number(year) === CURRENT_YEAR ? CURRENT_MONTH : 12 }, (_, i) => ({ value: String(i + 1), label: `Tháng ${i + 1}` }))
   return (
     <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between">
