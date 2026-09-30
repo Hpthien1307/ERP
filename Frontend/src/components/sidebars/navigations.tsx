@@ -1,10 +1,11 @@
-import { User, ScrollText, ClockCheck, NotepadText, Grid } from "lucide-react"
+import { User, ScrollText, ClockCheck, NotepadText, Grid, Settings } from "lucide-react"
 import type React from "react"
 
 type sideBarConfig = {
   icon: React.ReactNode
   title: string
   link: string
+  isAdmin?: boolean
 }
 
 export const navigations: sideBarConfig[] = [
@@ -16,17 +17,38 @@ export const navigations: sideBarConfig[] = [
   {
     icon: <ClockCheck size={20} />,
     title: "Chấm công",
-    link: "/attendance"
+    link: "/attendance",
+    isAdmin: false
   },
   {
     icon: <ScrollText size={20} />,
     title: "Quản lý công việc",
-    link: "/my-tasks"
+    link: "/my-tasks",
+    isAdmin: false
   },
   {
     icon: <NotepadText size={20} />,
     title: "Đơn từ & nghỉ phép",
-    link: "/my-requests"
+    link: "/my-requests",
+    isAdmin: false
+  },
+  {
+    icon: <Settings size={20} />,
+    title: "Quản lí nhân sự",
+    link: "/employees",
+    isAdmin: true
+  },
+  {
+    icon: <Settings size={20} />,
+    title: "Quản lí phòng ban",
+    link: "/departments",
+    isAdmin: true
+  },
+  {
+    icon: <Settings size={20} />,
+    title: "Quản lí chức vụ",
+    link: "/positions",
+    isAdmin: true
   },
   {
     icon: <User size={20} />,

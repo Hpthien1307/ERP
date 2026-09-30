@@ -30,7 +30,7 @@ const Profile = () => {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       fullName: user?.fullName || "",
-      phoneNumber: user?.phone || "",
+      phone: user?.phone || "",
       gender: user?.gender || "MALE",
       birthday: user?.birthday?.split("T")[0] || "",
       address: user?.address || "",
@@ -52,7 +52,7 @@ const Profile = () => {
   useEffect(() => {
     reset({
       fullName: user?.fullName || "",
-      phoneNumber: user?.phone || "",
+      phone: user?.phone || "",
       gender: user?.gender || "MALE",
       birthday: user?.birthday?.split("T")[0] || "",
       address: user?.address || "",
@@ -95,7 +95,7 @@ const Profile = () => {
     setAvatarFile(null)
     reset({
       fullName: user?.fullName || "",
-      phoneNumber: user?.phone || "",
+      phone: user?.phone || "",
       gender: user?.gender || "MALE",
       birthday: user?.birthday?.split("T")[0] || "",
       address: user?.address || "",
@@ -107,7 +107,7 @@ const Profile = () => {
   const buildUpdatePayload = (data: ProfileFormValidation): FormData | Record<string, string | null> => {
     const fields: Record<string, string | null> = {
       fullName: data.fullName.trim(),
-      phone: data.phoneNumber ? data.phoneNumber.trim() : null,
+      phone: data.phone ? data.phone.trim() : null,
       gender: data.gender || "MALE",
       address: data.address ? data.address.trim() : null,
       bio: data.bio ? data.bio.trim() : null,
@@ -265,8 +265,8 @@ const Profile = () => {
               <KeyIcon size={24} className="text-blue-600" /> Bảo mật & Tài khoản
             </div>
             <p className="text-slate-600 text-2xl leading-relaxed">
-              Email đăng nhập và các quyền hạn tổ chức do Quản trị viên (Admin) phê duyệt. Để thay đổi các thông tin này, vui lòng liên hệ phòng Hành chính Nhân
-              sự.
+              Email đăng nhập và các quyền hạn tổ chức do Quản trị viên (Admin) phê duyệt. Để thay đổi các thông tin này, vui lòng liên hệ
+              phòng Hành chính Nhân sự.
             </p>
           </div>
         </div>
@@ -277,7 +277,9 @@ const Profile = () => {
               <h3 className="text-3xl font-bold text-slate-900 flex items-center gap-x-2.5">
                 <User className="text-blue-600" size={26} /> Hồ sơ cá nhân
               </h3>
-              {isEditing && <span className="font-normal text-blue-700 bg-blue-50 px-6 py-2 rounded-full border border-blue-200">Đang chỉnh sửa</span>}
+              {isEditing && (
+                <span className="font-normal text-blue-700 bg-blue-50 px-6 py-2 rounded-full border border-blue-200">Đang chỉnh sửa</span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -302,15 +304,22 @@ const Profile = () => {
               <Input
                 label="Số điện thoại"
                 icon={<Phone size={18} />}
-                {...register("phoneNumber")}
-                error={errors.phoneNumber?.message}
+                {...register("phone")}
+                error={errors.phone?.message}
                 placeholder="0912 345 678"
                 disabled={!isEditing}
               />
 
               <Select label="Giới tính" {...register("gender")} options={GENDER_OPTIONS} disabled={!isEditing} />
 
-              <Input label="Ngày sinh" max={getTodayDateString()} type="date" icon={<Calendar size={18} />} {...register("birthday")} disabled={!isEditing} />
+              <Input
+                label="Ngày sinh"
+                max={getTodayDateString()}
+                type="date"
+                icon={<Calendar size={18} />}
+                {...register("birthday")}
+                disabled={!isEditing}
+              />
 
               <Input
                 label="Địa chỉ liên hệ"

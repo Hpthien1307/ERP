@@ -7,9 +7,9 @@ const departmentController = new DepartmentController()
 router.use(verifyToken)
 
 router.get("/department/", requireRole("ADMIN"), departmentController.getDp)
-router.get("/department/:id", requireRole("MANAGER"), departmentController.getDetailDp)
+router.get("/department/:id", requireRole("ADMIN"), departmentController.getDetailDp)
 router.post("/department", requireRole("ADMIN"), departmentController.createDp)
-router.patch("/department/:id", requireRole("MANAGER"), departmentController.updateDp)
+router.patch("/department/:id", requireRole("ADMIN"), departmentController.updateDp)
 router.delete("/department/:id", requireRole("ADMIN"), departmentController.deleteDp)
 
 export default router

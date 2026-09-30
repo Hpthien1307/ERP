@@ -22,13 +22,14 @@ export class UserController {
       const whereCondition = {
         ...(search && {
           OR: [
+            { id: { contains: search } },
             { email: { contains: search, mode: "insensitive" as const } },
             { fullName: { contains: search, mode: "insensitive" as const } }
           ]
         }),
-        ...(positionId && { positionId }),
-        ...(departmentId && { departmentId }),
-        ...(role && { role })
+        ...(positionId ? { positionId } : {}),
+        ...(departmentId ? { departmentId } : {}),
+        ...(role ? { role } : {})
       }
 
       const getUsers = await prisma.user.findMany({

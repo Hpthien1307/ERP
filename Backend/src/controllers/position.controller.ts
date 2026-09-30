@@ -10,6 +10,20 @@ export class PositionController {
       const getPosition = await prisma.position.findMany({
         orderBy: {
           createdAt: "desc"
+        },
+        include: {
+          department: {
+            select: {
+              id: true,
+              title: true
+            }
+          },
+          users: {
+            select: {
+              id: true,
+              fullName: true
+            }
+          }
         }
       })
 
@@ -33,7 +47,21 @@ export class PositionController {
       }
 
       const getPositionData = await prisma.position.findUnique({
-        where: { id: idValidation.data.id }
+        where: { id: idValidation.data.id },
+        include: {
+          department: {
+            select: {
+              id: true,
+              title: true
+            }
+          },
+          users: {
+            select: {
+              id: true,
+              fullName: true
+            }
+          }
+        }
       })
 
       if (!getPositionData) {
@@ -52,51 +80,62 @@ export class PositionController {
   }
 
   public createPosition = async (req: Request, res: Response, next: NextFunction) => {
-    const bodydValidation = PositionValidation.createPosition.safeParse(req.body)
-    if (!bodydValidation.success) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
-        errors: bodydValidation.error.flatten().fieldErrors
+    try {
+      const bodydValidation = PositionValidation.createPosition.safeParse(req.body)
+      if (!bodydValidation.success) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          message: STATUS_MESSAGE.STATUS_BAD_REQUEST,
+          errors: bodydValidation.error.flatten().fieldErrors
+        })
+      }
+
+      const { title, departmentId, userIds } = bodydValidation.data
+
+      const duplicateTitle = await prisma.position.findUnique({
+        where: { title }
       })
-    }
 
-    const { title, userIds } = bodydValidation.data
+      if (duplicateTitle) {
+        return res.status(StatusCodes.CONFLICT).json({
+          message: "Vị trí/chức vụ này đã tồn tại"
+        })
+      }
 
-    const duplicateTitle = await prisma.position.findUnique({
-      where: { title }
-    })
-
-    if (duplicateTitle) {
-      return res.status(StatusCodes.CONFLICT).json({
-        message: "Vị trí/chức vụ ngày đã tồn tại"
-      })
-    }
-
-    const createData = await prisma.position.create({
-      data: {
-        title: title || "Vị trí nhân sự",
-        ...(userIds &&
-          userIds.length > 0 && {
-            users: {
-              connect: userIds.map(userId => ({ id: userId }))
+      const createData = await prisma.position.create({
+        data: {
+          title: title || "Vị trí nhân sự",
+          departmentId: departmentId || null,
+          ...(userIds &&
+            userIds.length > 0 && {
+              users: {
+                connect: userIds.map(userId => ({ id: userId }))
+              }
+            })
+        },
+        include: {
+          department: {
+            select: {
+              id: true,
+              title: true
             }
-          })
-      },
-      include: {
-        users: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true
+          },
+          users: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true
+            }
           }
         }
-      }
-    })
+      })
 
-    return res.status(StatusCodes.OK).json({
-      message: STATUS_MESSAGE.STATUS_OK,
-      data: createData
-    })
+      return res.status(StatusCodes.OK).json({
+        message: STATUS_MESSAGE.STATUS_OK,
+        data: createData
+      })
+    } catch (error) {
+      next(error)
+    }
   }
 
   public updatePosition = async (req: Request, res: Response, next: NextFunction) => {
@@ -119,7 +158,21 @@ export class PositionController {
 
       const updateData = await prisma.position.update({
         where: { id: idValidation.data.id },
-        data: bodyValidation.data
+        data: bodyValidation.data,
+        include: {
+          department: {
+            select: {
+              id: true,
+              title: true
+            }
+          },
+          users: {
+            select: {
+              id: true,
+              fullName: true
+            }
+          }
+        }
       })
 
       return res.status(StatusCodes.OK).json({

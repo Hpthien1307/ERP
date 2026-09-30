@@ -214,14 +214,22 @@ const Tasks = () => {
     setDeleteTaskId(id)
   }, [])
 
-  const handleEditTask = useCallback((task: TaskItem) => {
-    setEditingTask(task)
-  }, [])
+  const handleEditTask = useCallback(
+    (task: TaskItem) => {
+      setEditingTask(task)
+      setCreateModal(prev => !prev)
+    },
+    [setEditingTask, setCreateModal]
+  )
+
+  const handleCreateModal = useCallback(() => {
+    setCreateModal(prev => !prev)
+  }, [setCreateModal])
 
   return (
     <div className="max-w-full mx-auto flex flex-col gap-y-8 pb-16">
       {/* 1. HEADER SECTION */}
-      <TaskHeader user={user} setCreateModal={() => setCreateModal(!createModal)} />
+      <TaskHeader user={user} setCreateModal={handleCreateModal} />
 
       {/* 2. STATS CARDS TỔNG QUAN */}
       {isMyTask ? <TaskStats statsData={stats} /> : ""}
@@ -282,7 +290,10 @@ const Tasks = () => {
             </div>
 
             {/* Nút đóng modal */}
-            <div className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer" onClick={handleCancel}>
+            <div
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              onClick={handleCancel}
+            >
               <X size={20} />
             </div>
           </div>
@@ -327,7 +338,14 @@ const Tasks = () => {
                 {...register("priority")}
               />
 
-              <Input label="Hạn hoàn thành (Deadline) *" type="date" min={today} required disabled={isReadOnlyFields} {...register("dueDate")} />
+              <Input
+                label="Hạn hoàn thành (Deadline) *"
+                type="date"
+                min={today}
+                required
+                disabled={isReadOnlyFields}
+                {...register("dueDate")}
+              />
             </div>
 
             <Textarea
@@ -341,7 +359,13 @@ const Tasks = () => {
             />
 
             <div className="flex items-center justify-end gap-x-4 pt-5 border-t border-slate-100">
-              <Btn text="Hủy bỏ" variant="default" size="default" classCustom="flex-1" buttonProps={{ type: "button", onClick: handleCancel }} />
+              <Btn
+                text="Hủy bỏ"
+                variant="default"
+                size="default"
+                classCustom="flex-1"
+                buttonProps={{ type: "button", onClick: handleCancel }}
+              />
 
               <Btn
                 text={editingTask ? "Cập nhật" : "Tạo công việc"}

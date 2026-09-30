@@ -7,6 +7,7 @@ export type PaginationType = {
 
 export type GENDER_TYPE = "MALE" | "FEMALE" | "OTHER"
 export type ROLE_TYPE = "ADMIN" | "MANAGER" | "EMPLOYEE"
+export type STATUS_ACCOUNT = "ACTIVE" | "INACTIVE"
 
 type DepartmentMember = {
   id: string

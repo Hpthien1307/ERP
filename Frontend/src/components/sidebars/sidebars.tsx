@@ -10,6 +10,8 @@ const Sidebars = () => {
     await signOut()
   }
 
+  const isAdmin = user?.role === "ADMIN"
+
   return (
     <aside className="sidebar fixed top-0 left-0 w-120 h-full bg-white border-r border-slate-200/80 flex flex-col justify-between z-50 shadow-xs">
       {/* Top Section: Logo & Brand */}
@@ -32,6 +34,7 @@ const Sidebars = () => {
           <ul className="flex flex-col gap-y-2">
             {navigations.map((item, index) => {
               const isActive = location.pathname === item.link
+              if (item.isAdmin !== undefined && item.isAdmin !== isAdmin) return null
 
               return (
                 <li key={index}>

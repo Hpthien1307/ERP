@@ -3,6 +3,7 @@ import { role_type, gender_type } from "@prisma/client"
 import { FIELD_MESSAGE } from "../constant/systemMessage.js"
 
 const BaseUserSchema = z.object({
+  // id: z.string().uuid("ID người dùng phải là UUID hợp lệ"),
   email: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).email("Email không đúng định dạng").toLowerCase().trim(),
   password: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
   avatarUrl: z.string().url("URL hình ảnh không hợp lệ").nullable().optional(),
@@ -12,7 +13,7 @@ const BaseUserSchema = z.object({
   role: z.nativeEnum(role_type),
   phone: z.string().nullable().optional(),
   address: z.string().optional(),
-  bio: z.string().optional(),
+  bio: z.string().optional().nullable(),
   leaveBalance: z.number().int().nonnegative(),
   departmentId: z.string().uuid().optional().nullable(),
   positionId: z.string().uuid().optional().nullable()

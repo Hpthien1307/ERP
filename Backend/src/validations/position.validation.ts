@@ -3,6 +3,7 @@ import { FIELD_MESSAGE } from "../constant/systemMessage.js"
 
 export const BasePositionSchema = z.object({
   title: z.string({ message: FIELD_MESSAGE.FIELD_NOT_EMPTY }).min(1, FIELD_MESSAGE.FIELD_REQUIRE).trim(),
+  departmentId: z.string().uuid("ID phòng ban phải là UUID"),
   userIds: z.array(z.string().uuid("ID nhân viên phải là UUID")).optional()
 })
 

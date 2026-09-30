@@ -4,6 +4,9 @@ import Profile from "@/pages/profile/profile"
 import Requests from "@/pages/requests/request"
 import Tasks from "@/pages/tasks/tasks"
 import Dashboard from "@/pages/dashboard/dashboard"
+import Employees from "@/pages/employees/employees"
+import Departments from "@/pages/departments/departments"
+import Positions from "@/pages/positions/positions"
 
 type RouteConfig = {
   path: string
@@ -26,7 +29,6 @@ const privateRoutes: RouteConfig[] = [
     path: "/attendance",
     component: Attendance
   },
-
   {
     path: "/profile",
     component: Profile
@@ -38,6 +40,18 @@ const privateRoutes: RouteConfig[] = [
   {
     path: "/my-tasks",
     component: Tasks
+  },
+  {
+    path: "/employees",
+    component: Employees
+  },
+  {
+    path: "/departments",
+    component: Departments
+  },
+  {
+    path: "/positions",
+    component: Positions
   }
 ]
 

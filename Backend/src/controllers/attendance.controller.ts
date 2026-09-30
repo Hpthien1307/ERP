@@ -223,17 +223,17 @@ export class AttendanceController {
         })
       }
 
-      const { month, year, userId, departmentId } = queryValidation.data
+      const { month, year, userId } = queryValidation.data
       const whereCondition: any = {}
 
       if (userId) whereCondition.userId = userId
 
       // Lọc theo phòng ban thông qua quan hệ của user
-      if (departmentId) {
-        whereCondition.user = {
-          departmentId
-        }
-      }
+      // if (departmentId) {
+      //   whereCondition.user = {
+      //     departmentId
+      //   }
+      // }
 
       if (month && year) {
         const startOfMonth = new Date(year, month - 1, 1)

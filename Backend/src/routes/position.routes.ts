@@ -7,10 +7,10 @@ const positionController = new PositionController()
 router.use(verifyToken)
 
 router.get("/position", requireRole("ADMIN"), positionController.getPosition)
-router.get("/position/:id", requireRole("MANAGER"), positionController.getDetailPosition)
+router.get("/position/:id", requireRole("ADMIN"), positionController.getDetailPosition)
 router.post("/position", requireRole("ADMIN"), positionController.createPosition)
-router.put("/position/:id", requireRole("MANAGER"), positionController.updatePosition)
-router.patch("/position/:id", requireRole("MANAGER"), positionController.updatePosition)
+router.put("/position/:id", requireRole("ADMIN"), positionController.updatePosition)
+router.patch("/position/:id", requireRole("ADMIN"), positionController.updatePosition)
 router.delete("/position/:id", requireRole("ADMIN"), positionController.deletePosition)
 
 export default router

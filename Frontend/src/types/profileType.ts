@@ -8,6 +8,8 @@ export const GENDER_OPTIONS = [
 
 export const ROLE_NAME_MAP: Record<ROLE_TYPE, string> = {
   ADMIN: "Quản trị viên",
-  MANAGER: "Trưởng phòng",
+  MANAGER: "Quản lí",
   EMPLOYEE: "Nhân viên"
 }
+
+export const ROLE_NAME_OPTIONS = Object.entries(ROLE_NAME_MAP).map(([value, label]) => ({ value, label }))

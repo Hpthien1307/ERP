@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
-interface PaginationProps {
+type PaginationProps = {
   currentPage: number
   totalPages: number
   onPageChange: (page: number) => void
