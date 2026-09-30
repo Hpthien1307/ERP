@@ -15,7 +15,7 @@ Các thư viện đã được cài đặt và cấu hình trong `package.json`:
 Cài đặt bằng lệnh:
 
 ```bash
-npm install express @prisma/client jsonwebtoken http-status-codes dotenv cors helmet morgan cookie-parser
+npm install express @prisma/client @prisma/adapter-pg pg jsonwebtoken bcrypt bcryptjs zod socket.io http-status-codes dotenv cors helmet morgan cookie cookie-parser
 ```
 
 - Chi tiết các gói:
@@ -34,7 +34,7 @@ npm install express @prisma/client jsonwebtoken http-status-codes dotenv cors he
 Cài đặt bằng lệnh:
 
 ```bash
-npm install -D typescript @types/node @types/express @types/jsonwebtoken @types/cors @types/morgan @types/cookie-parser prisma nodemon ts-node ts-node-dev tsx
+npm install -D typescript @types/node @types/express @types/jsonwebtoken @types/bcrypt @types/bcryptjs @types/cookie @types/cookie-parser @types/cors @types/morgan @types/pg prisma nodemon ts-node ts-node-dev tsx
 ```
 
 - Chi tiết các gói:
@@ -97,4 +97,8 @@ Trong dự án đã cấu hình các lệnh chạy chính:
 - **Chạy server build (Production):**
   ```bash
   npm run start
+  ```
+- **Tạo Access Token Secret (64 ký tự) cho Production env:**
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
   ```
